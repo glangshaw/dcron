@@ -7,6 +7,7 @@
  *
  * Copyright 1994 Matthew Dillon (dillon@apollo.backplane.com)
  * Copyright 2009-2019 James Pryor <dubiousjim@gmail.com>
+ * Copyright 2023 Gary Langshaw <gary.langshaw@gmail.com>
  * May be distributed under the GNU General Public License version 2 or any later version.
  */
 
@@ -320,21 +321,18 @@ main(int ac, char **av)
 			 * equal to t1, and less then or equal to t2.
 			 */
 
-			if (--rescan == 0) {
-				/*
-				 * If we resynchronize while jobs are running, we'll clobber
-				 * the job pids, so we won't know what's already running.
-				 */
-				if (CheckJobs() > 0) {
-					rescan = 1;
-				} else {
-					rescan = 60;
-					SynchronizeDir(CDir, NULL, 0);
-					SynchronizeDir(SCDir, "root", 0);
-					ReadTimestamps(NULL);
-				}
-			}
-			if (rescan < 60) {
+			if ( rescan > 0 )
+				--rescan;
+			/*
+			 * If we resynchronize while jobs are running, we'll clobber
+			 * the job pids, so we won't know what's already running.
+			 */
+			if (rescan == 0 && CheckJobs() == 0 ) {
+				rescan = 60;
+				SynchronizeDir(CDir, NULL, 0);
+				SynchronizeDir(SCDir, "root", 0);
+				ReadTimestamps(NULL);
+			} else {
 				CheckUpdates(CDir, NULL, t1, t2);
 				CheckUpdates(SCDir, "root", t1, t2);
 			}
