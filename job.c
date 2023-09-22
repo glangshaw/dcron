@@ -56,11 +56,16 @@ RunJob(CronFile *file, CronLine *line)
 	 */
 
 	if ((line->cl_Pid = fork()) == 0) {
+		/* CHILD, FORK OK, PRE-EXEC */
+
 		/*
-		 * CHILD, FORK OK, PRE-EXEC
-		 *
-		 * Change running state to the user in question
+		 * Clean up process environmennt for job.
+		 * ChangeUser() will setup: USER, LOGNAME, HOME, and SHELL.
 		 */
+        if ( ClearEnvOpt == 1 )
+            clearenv();
+
+		/* Change running state to the user in question */
 
 		if (ChangeUser(file->cf_UserName, TempDir) < 0) {
 			printlogf(LOG_ERR, "unable to ChangeUser (user %s %s)\n",

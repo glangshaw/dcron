@@ -9,7 +9,7 @@ crond - dillon's lightweight cron daemon
 SYNOPSIS
 ========
 **crond [-s dir] [-c dir] [-t dir] [-m user@host] [-M mailhandler]
-[-S|-L file] [-l loglevel] [-b|-f|-d]**
+[-C] [-S|-L file] [-l loglevel] [-b|-f|-d]**
 
 OPTIONS
 =======
@@ -44,6 +44,9 @@ executes commands on behalf of the users in question.
 	stdin. When a custom mailhandler is used, mailing is no longer logged
 	(have your mailhandler do that if you want it). When cron jobs generate no
 	stdout or stderr, nothing is sent to either sendmail or a custom mailhandler.
+
+-C
+:	clear the process environment when running jobs.
 
 -S
 :	log events to syslog, using syslog facility LOG_CRON and identity 'crond' (this is the default behavior).

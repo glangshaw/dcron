@@ -4,7 +4,7 @@
 crond - dillon's lightweight cron daemon
 .SH SYNOPSIS
 .PP
-\f[B]crond [-s dir] [-c dir] [-t dir] [-m user\@host] [-M mailhandler] [-S|-L file] [-l loglevel] [-b|-f|-d]\f[]
+\f[B]crond [-s dir] [-c dir] [-t dir] [-m user\@host] [-M mailhandler] [-C] [-S|-L file] [-l loglevel] [-b|-f|-d]\f[]
 .SH OPTIONS
 .PP
 \f[B]crond\f[] is a background daemon that parses individual
@@ -55,6 +55,11 @@ When a custom mailhandler is used, mailing is no longer logged
 (have your mailhandler do that if you want it).
 When cron jobs generate no stdout or stderr, nothing is sent to
 either sendmail or a custom mailhandler.
+.RS
+.RE
+.TP
+.B -C
+clear the process environment when running jobs.
 .RS
 .RE
 .TP

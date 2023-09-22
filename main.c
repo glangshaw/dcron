@@ -17,6 +17,7 @@ Prototype short DebugOpt;
 Prototype short LogLevel;
 Prototype short ForegroundOpt;
 Prototype short SyslogOpt;
+Prototype short ClearEnvOpt;
 Prototype const char *CDir;
 Prototype const char *SCDir;
 Prototype const char *TSDir;
@@ -33,6 +34,7 @@ short DebugOpt = 0;
 short LogLevel = LOG_LEVEL;
 short ForegroundOpt = 0;
 short SyslogOpt = 1;
+short ClearEnvOpt = 0;
 const char  *CDir = CRONTABS;
 const char  *SCDir = SCRONTABS;
 const char *TSDir = CRONSTAMPS;
@@ -137,7 +139,7 @@ main(int ac, char **av)
 
 	opterr = 0;
 
-	while ((i = getopt(ac,av,"dl:L:fbSc:s:m:M:t:")) != -1) {
+	while ((i = getopt(ac,av,"dl:L:fbSCc:s:m:M:t:")) != -1) {
 		switch (i) {
 			case 'l':
 				{
@@ -200,6 +202,9 @@ main(int ac, char **av)
 			case 'b':
 				ForegroundOpt = 0;
 				break;
+			case 'C':			/* call clearenv() when forking jobs */
+				ClearEnvOpt = 1;
+				break;
 			case 'S':			/* log through syslog */
 				SyslogOpt = 1;
 				break;
@@ -231,12 +236,13 @@ main(int ac, char **av)
 				 * check for parse error
 				 */
 				printf("dillon's cron daemon " VERSION "\n");
-				printf("crond [-s dir] [-c dir] [-t dir] [-m user@host] [-M mailer] [-S|-L [file]] [-l level] [-b|-f|-d]\n");
+				printf("crond [-s dir] [-c dir] [-t dir] [-m user@host] [-M mailer] [-C] [-S|-L [file]] [-l level] [-b|-f|-d]\n");
 				printf("-s            directory of system crontabs (defaults to %s)\n", SCRONTABS);
 				printf("-c            directory of per-user crontabs (defaults to %s)\n", CRONTABS);
 				printf("-t            directory of timestamps (defaults to %s)\n", CRONSTAMPS);
 				printf("-m user@host  where should cron output be directed? (defaults to local user)\n");
 				printf("-M mailer     (defaults to %s)\n", SENDMAIL);
+				printf("-C            clear the environment when running jobs\n");
 				printf("-S            log to syslog using identity '%s' (default)\n", LOG_IDENT);
 				printf("-L file       log to specified file instead of syslog\n");
 				printf("-l loglevel   log events <= this level (defaults to %s (level %d))\n", LevelAry[LOG_LEVEL], LOG_LEVEL);
