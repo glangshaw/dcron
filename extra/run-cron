@@ -6,9 +6,9 @@ if ! [ -d "$1" ]; then
    exit 1
 fi
 
-for cronfile in "$1"/* ; do
-	if [ -x "$cronfile" ]; then
-		"$cronfile"
-	fi
+for cronfile in "${1%/}"/* ; do
+    if [ -x "$cronfile" ]; then
+        "$cronfile"
+    fi
 done
 unset cronfile
