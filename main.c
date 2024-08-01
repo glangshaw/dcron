@@ -268,11 +268,10 @@ main(int ac, char **av)
 	} else {
 		/* daemon in foreground */
 
-		/* stay in existing session, but start a new process group */
-		if (setpgid(0,0)) {
-			perror("setpgid");
-			exit(1);
-		}
+		/* Stay in existing session, but start a new process group. Ignore failure:
+		 * which is only possible if we are already a session and group leader.
+		 */
+		setpgid(0,0), errno = 0;
 
 		/* stderr stays open, start SIGHUP ignoring, SIGCHLD handling */
 		initsignals();
