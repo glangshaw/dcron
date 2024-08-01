@@ -51,7 +51,7 @@ all: $(PROTOS) crond crontab ;
 	echo "CRONSTAMPS = $(CRONSTAMPS)" >> config
 
 protos.h: $(SRCS) $(TABSRCS)
-	fgrep -h Prototype $(SRCS) $(TABSRCS) > protos.h
+	grep -F -h Prototype $(SRCS) $(TABSRCS) > protos.h
 
 crond: $(OBJS)
 	$(CC) $(LDFLAGS) $^ $(LIBS) -o crond
