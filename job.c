@@ -28,8 +28,11 @@ RunJob(CronFile *file, CronLine *line)
 	 * try to open mail output file - owner root so nobody can screw with it.
 	 */
 
-	snprintf(mailFile, sizeof(mailFile), TempFileFmt,
+	snprintf(mailFile, sizeof(mailFile), MailFileFmt,
 			file->cf_UserName, (int)getpid());
+
+	/* if we have an old mailFile of the same name laying around remove it. */
+	remove(mailFile);
 
 	if ((mailFd = open(mailFile, O_CREAT|O_TRUNC|O_WRONLY|O_EXCL|O_APPEND, 0600)) >= 0) {
 		/* success: write headers to mailFile */
@@ -147,7 +150,7 @@ RunJob(CronFile *file, CronLine *line)
 		 */
 		char mailFile2[SMALL_BUFFER];
 
-		snprintf(mailFile2, sizeof(mailFile2), TempFileFmt,
+		snprintf(mailFile2, sizeof(mailFile2), MailFileFmt,
 				file->cf_UserName, line->cl_Pid);
 		rename(mailFile, mailFile2);
 	}
@@ -263,7 +266,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 	/*
 	 * Calculate mailFile's name before clearing cl_Pid
 	 */
-	snprintf(mailFile, sizeof(mailFile), TempFileFmt,
+	snprintf(mailFile, sizeof(mailFile), MailFileFmt,
 			file->cf_UserName, line->cl_Pid);
 	line->cl_Pid = 0;
 

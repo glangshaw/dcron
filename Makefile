@@ -7,6 +7,7 @@ CRONTAB_GROUP = wheel
 SCRONTABS = /etc/cron.d
 CRONTABS = /var/spool/cron/crontabs
 CRONSTAMPS = /var/spool/cron/cronstamps
+CRONMAIL = /var/spool/cron/mail
 # used for syslog
 LOG_IDENT = crond
 # used for logging to file (syslog manages its own timestamps)
@@ -35,7 +36,8 @@ LIBS =
 LDFLAGS =
 DEFS =  -DVERSION='"$(VERSION)"' \
 		-DSCRONTABS='"$(SCRONTABS)"' -DCRONTABS='"$(CRONTABS)"' \
-		-DCRONSTAMPS='"$(CRONSTAMPS)"' -DLOG_IDENT='"$(LOG_IDENT)"' \
+		-DCRONSTAMPS='"$(CRONSTAMPS)"' -DCRONMAIL='"$(CRONMAIL)"' \
+		-DLOG_IDENT='"$(LOG_IDENT)"' \
 		-DTIMESTAMP_FMT='"$(TIMESTAMP_FMT)"'
 
 # save variables needed for `make install` in config
@@ -49,6 +51,7 @@ all: $(PROTOS) crond crontab ;
 	echo "SCRONTABS = $(SCRONTABS)" >> config
 	echo "CRONTABS = $(CRONTABS)" >> config
 	echo "CRONSTAMPS = $(CRONSTAMPS)" >> config
+	echo "CRONMAIL = $(CRONMAIL)" >> config
 
 protos.h: $(SRCS) $(TABSRCS)
 	grep -F -h Prototype $(SRCS) $(TABSRCS) > protos.h
@@ -70,6 +73,7 @@ install:
 	$(INSTALL_DIR) $(DESTDIR)$(SCRONTABS)
 	$(INSTALL_DIR) $(DESTDIR)$(CRONTABS)
 	$(INSTALL_DIR) $(DESTDIR)$(CRONSTAMPS)
+	$(INSTALL_DIR) $(DESTDIR)$(CRONMAIL)
 
 clean: force
 	rm -f *.o $(PROTOS)

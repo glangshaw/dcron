@@ -57,6 +57,7 @@ their default values):
 	MANDIR = $(PREFIX)/share/man  # where manpages will be installed
 	CRONTABS = /var/spool/cron/crontabs     # default dir for per-user crontabs
 	CRONSTAMPS = /var/spool/cron/cronstamps # default dir
+	CRONMAIL = /var/spool/cron/mail  # where crond will temporarily spool job output
 	SCRONTABS = /etc/cron.d   # default dir for system crontabs
 
 	CRONTAB_GROUP = wheel     # who's allowed to edit their own crontabs?
@@ -112,6 +113,7 @@ are normally in /var/spool/cron/cronstamps. These directories normally have perm
 	drwxr-xr-x  2 root   root     4096 Jan  6 18:50 /var/spool/cron
 	drwxr-xr-x  1 root   root        0 Jan  6 18:58 /var/spool/cron/crontabs
 	drwxr-xr-x  1 root   root        0 Jan  6 18:58 /var/spool/cron/cronstamps/
+	drwxr-xr-x  1 root   root        0 Jan  6 18:58 /var/spool/cron/mail
 
 Here is the superuser's crontab, created using `sudo crontab -e`:
 

@@ -57,6 +57,9 @@
 #ifndef CRONSTAMPS
 #define CRONSTAMPS	"/var/spool/cron/cronstamps"
 #endif
+#ifndef CRONMAIL
+#define CRONMAIL	"/var/spool/cron/mail"
+#endif
 #ifndef LOG_IDENT
 #define LOG_IDENT	"crond"
 #endif
@@ -170,4 +173,3 @@ typedef struct CronNotifier {
 } CronNotifier;
 
 #include "protos.h"
-

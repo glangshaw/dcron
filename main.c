@@ -27,8 +27,8 @@ Prototype uid_t DaemonUid;
 Prototype pid_t DaemonPid;
 Prototype const char *SendMail;
 Prototype const char *Mailto;
-Prototype char *TempDir;
-Prototype char *TempFileFmt;
+Prototype const char *TempDir;
+Prototype const char *MailFileFmt;
 
 short DebugOpt = 0;
 short LogLevel = LOG_LEVEL;
@@ -42,8 +42,8 @@ const char *LogFile = NULL; 	/* opened with mode 0600 */
 const char *LogHeader = LOGHEADER;
 const char *SendMail = NULL;
 const char *Mailto = NULL;
-char *TempDir;
-char *TempFileFmt;
+const char *MailFileFmt = CRONMAIL "/cron.%s.%d" ;
+const char *TempDir = TMPDIR;
 
 uid_t DaemonUid;
 pid_t DaemonPid;
@@ -269,22 +269,6 @@ main(int ac, char **av)
 	}
 	dup2(i, 0);
 	dup2(i, 1);
-
-	/* create tempdir with permissions 0755 for cron output */
-	TempDir = strdup(TMPDIR "/cron.XXXXXX");
-	if (mkdtemp(TempDir) == NULL) {
-		perror("mkdtemp");
-		exit(1);
-	}
-	if (chmod(TempDir, S_IRWXU|S_IRGRP|S_IXGRP|S_IROTH|S_IXOTH)) {
-		perror("chmod");
-		exit(1);
-	}
-	if (!(TempFileFmt = concat(TempDir, "/cron.%s.%d", NULL))) {
-		errno = ENOMEM;
-		perror("main");
-		exit(1);
-	}
 
 	if (ForegroundOpt == 0) {
 

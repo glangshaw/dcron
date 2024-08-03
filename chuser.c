@@ -9,10 +9,10 @@
 
 #include "defs.h"
 
-Prototype int ChangeUser(const char *user, char *dochdir);
+Prototype int ChangeUser(const char *user, const char *dochdir);
 
 int
-ChangeUser(const char *user, char *dochdir)
+ChangeUser(const char *user, const char *dochdir)
 {
 	struct passwd *pas;
 
