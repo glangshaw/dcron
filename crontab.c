@@ -8,6 +8,7 @@
  *
  * Copyright 1994 Matthew Dillon (dillon@apollo.backplane.com)
  * Copyright 2009-2019 James Pryor <dubiousjim@gmail.com>
+ * Copyright 2024 Gary Langshaw <gary.langshaw@gmail.com>
  * May be distributed under the GNU General Public License version 2 or any later version.
  */
 
@@ -22,6 +23,16 @@ void EditFile(const char *user, const char *file);
 const char *CDir = CRONTABS;
 int   UserId;
 
+char NewPath[SMALL_BUFFER];
+int NewFd = -1;
+
+static void clean_exit(int signum)
+{
+	if ( NewFd != -1 )
+		remove(NewPath);
+
+	exit(1);
+}
 
 int
 main(int ac, char **av)
@@ -191,24 +202,33 @@ main(int ac, char **av)
 		case REPLACE:
 			{
 				char buf[RW_BUFFER];
-				char path[SMALL_BUFFER];
-				int fd;
 				int n;
+
+				/*
+				 * Setup signal handlers to avoid leaving a .new file about:
+				 */
+				struct sigaction sa;
+				sa.sa_handler = clean_exit;
+				sigemptyset(&sa.sa_mask);
+				sa.sa_flags = SA_RESTART;
+				sigaction(SIGINT, &sa, NULL);
+				sigaction(SIGHUP, &sa, NULL);
+				sigaction(SIGTERM, &sa, NULL);
 
 				/*
 				 * Read from repFd, write to fd for "$CDir/$USER.new"
 				 */
-				snprintf(path, sizeof(path), "%s.new", pas->pw_name);
-				if ((fd = open(path, O_CREAT|O_TRUNC|O_EXCL|O_APPEND|O_WRONLY, 0600)) >= 0) {
+				snprintf(NewPath, sizeof(NewPath), "%s.new", pas->pw_name);
+				if ((NewFd = open(NewPath, O_CREAT|O_TRUNC|O_EXCL|O_APPEND|O_WRONLY, 0600)) >= 0) {
 					while ((n = read(repFd, buf, sizeof(buf))) > 0) {
-						write(fd, buf, n);
+						write(NewFd, buf, n);
 					}
-					close(fd);
-					rename(path, pas->pw_name);
+					close(NewFd);
+					rename(NewPath, pas->pw_name);
 				} else {
 					fprintf(stderr, "unable to create %s/%s: %s\n",
 							CDir,
-							path,
+							NewPath,
 							strerror(errno)
 						   );
 				}
