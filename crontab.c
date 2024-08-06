@@ -1,4 +1,3 @@
-
 /*
  * CRONTAB.C
  *
@@ -13,6 +12,7 @@
  */
 
 #include "defs.h"
+#include <sys/file.h>
 
 Prototype void printlogf(int level, const char *ctl, ...);
 
@@ -41,6 +41,7 @@ main(int ac, char **av)
 	struct passwd *pas;
 	char *repFile = NULL;
 	int repFd = 0;
+	int lockFd = -1;
 	int i;
 	char caller[SMALL_BUFFER];		/* user that ran program */
 
@@ -148,6 +149,26 @@ main(int ac, char **av)
 	}
 
 	/*
+	 * Serialise updates to crontab
+	 */
+
+	if ( option == EDIT || option == REPLACE ) {
+		lockFd = open(pas->pw_name, O_CREAT|O_RDONLY|O_CLOEXEC, 0600 );
+		if ( lockFd == -1 ) {
+			fprintf(stderr, "could not open crontab: %s\n", pas->pw_name);
+			exit(1);
+		}
+		if ( flock(lockFd, LOCK_EX|LOCK_NB) != 0 ) {
+			if ( errno = EWOULDBLOCK ) {
+				fprintf(stderr, "crontab %s in use - try again later.\n", pas->pw_name);
+			} else {
+				fprintf(stderr, "lock failed for crontab: %s\n", pas->pw_name);
+			}
+			exit(1);
+		}
+	}
+
+	/*
 	 * Handle options as appropriate
 	 */
 
@@ -219,7 +240,7 @@ main(int ac, char **av)
 				 * Read from repFd, write to fd for "$CDir/$USER.new"
 				 */
 				snprintf(NewPath, sizeof(NewPath), "%s.new", pas->pw_name);
-				if ((NewFd = open(NewPath, O_CREAT|O_TRUNC|O_EXCL|O_APPEND|O_WRONLY, 0600)) >= 0) {
+				if ((NewFd = open(NewPath, O_CREAT|O_TRUNC|O_APPEND|O_WRONLY, 0600)) >= 0) {
 					while ((n = read(repFd, buf, sizeof(buf))) > 0) {
 						write(NewFd, buf, n);
 					}
@@ -386,4 +407,3 @@ EditFile(const char *user, const char *file)
 	}
 	waitpid(pid, NULL, 0);
 }
-
