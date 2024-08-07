@@ -852,7 +852,7 @@ FixDayDow(CronLine *line)
 		}
 	}
 
-	for (i = 0; i < arysize(line->cl_Days); ++i) {
+	for (i = 1; i < arysize(line->cl_Days); ++i) {
 		if (line->cl_Days[i] == 0) {
 			/* '*' was NOT specified in the Date field on this CronLine */
 			DomStar = 0;
@@ -865,7 +865,7 @@ FixDayDow(CronLine *line)
 		return;
 
 	/* Set individual bits within the DoW mask... */
-	for (i = 0; i < arysize(line->cl_Days); ++i) {
+	for (i = 1; i < arysize(line->cl_Days); ++i) {
 		if (line->cl_Days[i]) {
 			if (i < 6)
 				mask |= 1 << (i - 1);
