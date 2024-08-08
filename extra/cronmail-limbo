@@ -1,0 +1,38 @@
+#!/bin/sh
+#
+# cronmail-limbo:
+#
+# If crond is shutdown while a job is running the jobs mail spool file
+# will end up being left in limbo as crond won't be there to respond
+# to the SIGCHILD and process the completed jobs mail file. This script
+# will attempt to process any such files.
+
+PATH=/bin:/sbin:/usr/bin:/usr/sbin
+
+CRONMAIL=/var/spool/cron/mail
+
+# Must be run as root.
+
+if [ "$(id -u)" -ne 0 ];then
+  exit 1
+fi
+
+process_limbo_mail()
+{
+  local mailuser mailfile
+
+  cd "${CRONMAIL:-/var/spool/cron/mail}" || exit 1
+
+  for mailfile in cron.*
+  do
+    if [ -r "$mailfile" ]; then
+      mailuser=${mailfile#cron.}
+      mailuser=${sender%.*}
+      if ! fuser -s "$mailfile" ; then
+        sendmail -f "$mailuser" -i "$mailuser" < "$mailfile" && rm "$mailfile"
+      fi
+    fi
+  done
+}
+
+process_limbo_mail

@@ -176,6 +176,10 @@ run crond using -L /var/log/crond.log. If you run crond using syslog instead (th
 you may prefer to configure the rotation of all your syslog-generated logs in a
 single config file.
 
+cronmail-limbo
+:   This script will process any mail files left in limbo by crond being terminated while
+jobs are still running.
+
 crontab.vim
 :	This makes vim handle backup files in way that doesn't interfere with crontab's security
 model.
