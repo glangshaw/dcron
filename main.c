@@ -46,6 +46,70 @@ char *TempFileFmt;
 uid_t DaemonUid;
 pid_t DaemonPid;
 
+void RunMainLoop( void )
+{
+    time_t t1 = time(NULL);
+    time_t t2;
+    long dt;
+    short rescan = 60;
+    short stime = 60;
+
+    for (;;) {
+        sleep((stime + 1) - (short)(time(NULL) % stime));
+
+        t2 = time(NULL);
+        dt = t2 - t1;
+
+        /*
+         * The file 'cron.update' is checked to determine new cron
+         * jobs.  The directory is rescanned once an hour to deal
+         * with any screwups.
+         *
+         * check for disparity.  Disparities over an hour either way
+         * result in resynchronization.  A reverse-indexed disparity
+         * less then an hour causes us to effectively sleep until we
+         * match the original time (i.e. no re-execution of jobs that
+         * have just been run).  A forward-indexed disparity less then
+         * an hour causes intermediate jobs to be run, but only once
+         * in the worst case.
+         *
+         * when running jobs, the inequality used is greater but not
+         * equal to t1, and less then or equal to t2.
+         */
+
+        if ( rescan > 0 )
+            --rescan;
+        /*
+         * If we resynchronize while jobs are running, we'll clobber
+         * the job pids, so we won't know what's already running.
+         */
+        if (rescan == 0 && CheckJobs() == 0 ) {
+            rescan = 60;
+            SynchronizeDir(CDir, NULL, 0);
+            SynchronizeDir(SCDir, "root", 0);
+            ReadTimestamps(NULL);
+        } else {
+            CheckUpdates(CDir, NULL, t1, t2);
+            CheckUpdates(SCDir, "root", t1, t2);
+        }
+        if (DebugOpt)
+            printlogf(LOG_DEBUG, "Wakeup dt=%d\n", dt);
+        if (dt < -60*60 || dt > 60*60) {
+            t1 = t2;
+            printlogf(LOG_NOTICE,"time disparity of %d minutes detected\n", dt / 60);
+        } else if (dt > 0) {
+            TestJobs(t1, t2);
+            RunJobs();
+            sleep(5);
+            if (CheckJobs() > 0)
+                stime = 10;
+            else
+                stime = 60;
+            t1 = t2;
+        }
+    }
+}
+
 int
 main(int ac, char **av)
 {
@@ -291,68 +355,8 @@ main(int ac, char **av)
 	ReadTimestamps(NULL);
 	TestStartupJobs(); /* @startup jobs only run when crond is started, not when their crontab is loaded */
 
-	{
-		time_t t1 = time(NULL);
-		time_t t2;
-		long dt;
-		short rescan = 60;
-		short stime = 60;
+    RunMainLoop();  /* does not return */
 
-		for (;;) {
-			sleep((stime + 1) - (short)(time(NULL) % stime));
-
-			t2 = time(NULL);
-			dt = t2 - t1;
-
-			/*
-			 * The file 'cron.update' is checked to determine new cron
-			 * jobs.  The directory is rescanned once an hour to deal
-			 * with any screwups.
-			 *
-			 * check for disparity.  Disparities over an hour either way
-			 * result in resynchronization.  A reverse-indexed disparity
-			 * less then an hour causes us to effectively sleep until we
-			 * match the original time (i.e. no re-execution of jobs that
-			 * have just been run).  A forward-indexed disparity less then
-			 * an hour causes intermediate jobs to be run, but only once
-			 * in the worst case.
-			 *
-			 * when running jobs, the inequality used is greater but not
-			 * equal to t1, and less then or equal to t2.
-			 */
-
-			if ( rescan > 0 )
-				--rescan;
-			/*
-			 * If we resynchronize while jobs are running, we'll clobber
-			 * the job pids, so we won't know what's already running.
-			 */
-			if (rescan == 0 && CheckJobs() == 0 ) {
-				rescan = 60;
-				SynchronizeDir(CDir, NULL, 0);
-				SynchronizeDir(SCDir, "root", 0);
-				ReadTimestamps(NULL);
-			} else {
-				CheckUpdates(CDir, NULL, t1, t2);
-				CheckUpdates(SCDir, "root", t1, t2);
-			}
-			if (DebugOpt)
-				printlogf(LOG_DEBUG, "Wakeup dt=%d\n", dt);
-			if (dt < -60*60 || dt > 60*60) {
-				t1 = t2;
-				printlogf(LOG_NOTICE,"time disparity of %d minutes detected\n", dt / 60);
-			} else if (dt > 0) {
-				TestJobs(t1, t2);
-				RunJobs();
-				sleep(5);
-				if (CheckJobs() > 0)
-					stime = 10;
-				else
-					stime = 60;
-				t1 = t2;
-			}
-		}
-	}
-	/* not reached */
+    return 1;
 }
 
