@@ -1,3 +1,24 @@
+v5.0 26-May-2026
+  * crond will now clear the process environment before running jobs
+    when the '-C' option is specified on startup.  This will avoid the
+    need to start the daeon via'env -i' in order to get a pristine
+    environment.
+
+  * job output will now be stored in a fixed location, configured via
+    the CRONMAIL build option, default: /var/spool/cron/mail rather
+    than using a dynamically created directory under TMPDIR.  This
+    will prevent repeated daemon stops/starts littering /tmp with
+    directories.
+
+  * a new sample script, cronmail-limbo, is provided in the extras/
+    directory to handle any mailfiles left behind should the daemon be
+    stopped while there are running jobs.
+
+  * crontab now includes signal handlers and a locking mechanism to more
+    gracefully handle attempts at concurrent updates to the same crontab.
+
+  * Many other fixes and cleanups. See the git log for details.
+
 v4.5  1-May-2011
   * Some cron jobs were running multiple times. Now we make sure not to
     ArmJobs that are already running; and not to resynchronize while jobs are
