@@ -190,4 +190,5 @@ SEE ALSO
 AUTHORS
 =======
 Matthew Dillon (dillon@apollo.backplane.com): original developer  
-James Pryor (dubiousjim@gmail.com): current developer
+James Pryor (profjim\@jimpryor.net): developer, 4.x releases (2010-2024}.
+Gary Langshaw (gary.langshaw@gmail.com) developer, 5.x releases.

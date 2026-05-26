@@ -2,8 +2,59 @@ DCRON - DILLON'S LIGHTWEIGHT CRON DAEMON
 ========================================
 
 This lightweight cron daemon aims to be simple and secure, with just enough
-features to stay useful. It was written from scratch by Matt Dillon in 1994.
-It's now developed and maintained by James Pryor.
+features to stay useful.  It was written from scratch by Matt Dillon in 1994,
+and was subsequently developed and maintained by James Pryor from Version 4.0
+through 4.5 (2010 - 2022).
+
+This fork is being maintained and developed by
+Gary Langshaw <gary.langshaw@gmail.com>
+
+*******************************************************************************
+About this fork:
+
+Approximately two years ago Jim updated this README with the following text:
+
+  **I (dubiousjim) haven't been able to maintain this project for a
+    while and am not actively using the code myself.
+
+    Here is [a fork](https://github.com/ptchinster/dcron) with active
+    development.  I recommend users to follow there instead, and submit
+    issues and pull requests over there.**
+
+The "ptchinster" fork hasn't seen much in the way of "active development" since
+then.  The supposed new maintainer hasn't even updated the README to remove Jim
+as maintainer or add his own contact details, and the semi-anonymous
+"ptchinster" github handle is all there is to identify him.
+
+As such, I suspect that the above message from Jim is more of a "Hey, I'm done,
+but there's another one over there!" rather than any sort of formal-handover,
+but I could be wrong.
+
+Given that the "ptchinster" fork doesn't seem to be a serious attempt at taking
+dcron forward I decided to post my own fixes and enhancements to the codebase
+in a newly forked repo.  I'm not intending to step on anyones toes here, just
+making my private dcron patchset public.
+
+[My fork](https://github.com/glangshaw/dcron) is forked from Jim's dcon github
+repo with Jim's original master branch renamed to 4.x.
+
+To draw a clear line of distinction between the work of the prior maintainers
+and my continuation of that work I will be using a separate branch "5.x" and
+any future releases will also be numbered 5.x.  The start-point for the 5.x
+branch will be Jim's 4.5 release of 2011: tag v4.5, commit:
+206efcfb05212ea320c53ec4499e21c58e1b7c41.
+
+In addition to my own changes, I will be applying a few commits taken from
+Jim's master branch post 4.5 and a number of other fixes taken from the
+outstanding issues and pull requests submitted by others on Jim's github repo.
+
+The remainder of this README is as written by Matt and/or Jim, except where I
+document new features or changes.
+
+I hope you find this valuable.
+
+— Gary.
+*******************************************************************************
 
 In the author's opinion, having to combine a cron daemon with another daemon
 like anacron makes for too much complexity. So the goal is a simple cron daemon
@@ -34,12 +85,7 @@ crond and close attention to preventing crond from running away.
 DOWNLOADING
 -----------
 
-The project is hosted at: <http://www.jimpryor.net/linux/dcron.html>.
-
-The latest version is 4.5, which can be downloaded here:
-<http://www.jimpryor.net/linux/releases/dcron-4.5.tar.gz>.
-
-A public git repo is available at: <https://github.com/dubiousjim/dcron>.
+A public git repo is available at: <http://github.com/glangshaw/dcron>.
 
 
 COMPILING
@@ -188,8 +234,11 @@ model.
 BUG REPORTS, SUBMISSIONS
 ------------------------
 
-Send any bug reports and source code changes to James Pryor:
-<dubiousjim@gmail.com>.
+** Please don't bother Jim Pryor about issues with this fork. **
+
+Send any bug reports and source code changes to Gary Langshaw
+<gary.langshaw@gmail.com> or raise an issue on the github repo.
+
 
 We aim to keep this program simple, secure, and bug-free, in preference to
 adding features. Those advanced features we have added recently (such as
@@ -220,4 +269,3 @@ CREDITS
 
 We use `concat`, a lightweight replacement for `asprintf`, in order to be more
 portable. This was written by Solar Designer and is in the public domain.
-
