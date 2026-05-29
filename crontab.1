@@ -55,10 +55,12 @@ Instead, it just runs all commands using \f[C]/bin/sh\f[].
 (Commands can of course be script files written in any shell you
 like.)
 .PP
-Nor does it do any special environment handling.
-A shell script is better-suited to doing that than a cron daemon.
-This cron daemon runs each job in a clean environment with
-only four environment variables: USER, LOGNAME, HOME, and SHELL.
+Nor does it do any special environment handling, other than optionally
+clearing the environment if the -C option was specified when starting
+the cron daemon. A shell script is better-suited to setting up the
+environment than a cron daemon.
+After optionally clearing the environment, this cron daemon sets four
+environment variables: USER, LOGNAME, HOME, and SHELL.
 .PP
 Our crontab format is roughly similar to that used by vixiecron.
 Individual fields may contain a time, a time range, a time range

@@ -52,9 +52,11 @@ shells; that would require special-casing users with no login shell. Instead,
 it just runs all commands using `/bin/sh`. (Commands can of course be script
 files written in any shell you like.)
 
-Nor does it do any special environment handling. A shell script is
-better-suited to doing that than a cron daemon. This cron daemon sets up only
-four environment variables: USER, LOGNAME, HOME, and SHELL.
+Nor does it do any special environment handling, other than optionally clearing
+the environment if the -C option was specified when starting the cron daemon. A
+shell script is better-suited to setting up the environment than a cron daemon.
+After optionally clearing the environment, this cron daemon sets four
+environment variables: USER, LOGNAME, HOME, and SHELL.
 
 
 Our crontab format is roughly similar to that used by vixiecron. Individual
