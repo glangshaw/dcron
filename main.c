@@ -50,11 +50,13 @@ pid_t DaemonPid;
 
 void RunMainLoop( void )
 {
-    time_t t1 = time(NULL);
+    time_t t1;
     time_t t2;
+    time_t rescan;  /* time of last rescan */
     long dt;
-    short rescan = 60;
-    short stime = 60;
+    short stime = INACTIVE_SLEEP_PERIOD;
+
+    rescan = t1 = time(NULL);
 
     for (;;) {
         sleep((stime + 1) - (short)(time(NULL) % stime));
@@ -79,14 +81,13 @@ void RunMainLoop( void )
          * equal to t1, and less then or equal to t2.
          */
 
-        if ( rescan > 0 )
-            --rescan;
-        /*
-         * If we resynchronize while jobs are running, we'll clobber
-         * the job pids, so we won't know what's already running.
-         */
-        if (rescan == 0 && CheckJobs() == 0 ) {
-            rescan = 60;
+        if ( rescan + RESCAN_INTERVAL <= t2 && CheckJobs() == 0 ) {
+           /*
+            * If we resynchronize while jobs are running we'll clobber
+            * the job pids, testing CheckJobs() will avoid that, deffering
+            * the rescan until there are no running jobs.
+            */
+            rescan = t2;
             SynchronizeDir(CDir, NULL, 0);
             SynchronizeDir(SCDir, "root", 0);
             ReadTimestamps(NULL);
@@ -96,17 +97,18 @@ void RunMainLoop( void )
         }
         if (DebugOpt)
             printlogf(LOG_DEBUG, "Wakeup dt=%d\n", dt);
-        if (dt < -60*60 || dt > 60*60) {
+        if (dt < -ONE_HOUR_SECONDS || dt > ONE_HOUR_SECONDS) {
             t1 = t2;
+            rescan = 0; /* force a rescan */
             printlogf(LOG_NOTICE,"time disparity of %d minutes detected\n", dt / 60);
         } else if (dt > 0) {
             TestJobs(t1, t2);
             RunJobs();
-            sleep(5);
+            sleep(SETTLE_SLEEP_PERIOD);
             if (CheckJobs() > 0)
-                stime = 10;
+                stime = ACTIVE_SLEEP_PERIOD;
             else
-                stime = 60;
+                stime = INACTIVE_SLEEP_PERIOD;
             t1 = t2;
         }
     }

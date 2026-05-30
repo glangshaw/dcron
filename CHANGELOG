@@ -1,3 +1,6 @@
+git 5.x 31-May-2026
+  * fix to calculation of when the hourly crontab resync is due.
+
 v5.0 26-May-2026
   * crond will now clear the process environment before running jobs
     when the '-C' option is specified on startup.  This will avoid the
