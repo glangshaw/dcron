@@ -5,9 +5,9 @@ VERSION = 5.0
 PREFIX = /usr/local
 CRONTAB_GROUP = wheel
 SCRONTABS = /etc/cron.d
-CRONTABS = /var/spool/cron/crontabs
-CRONSTAMPS = /var/spool/cron/cronstamps
-CRONMAIL = /var/spool/cron/mail
+CRONTABS = /var/lib/cron/crontabs
+CRONSTAMPS = /var/lib/cron/cronstamps
+CRONMAIL = /var/spool/cron
 # used for syslog
 LOG_IDENT = crond
 # used for logging to file (syslog manages its own timestamps)

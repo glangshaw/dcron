@@ -9,7 +9,7 @@
 
 PATH=/bin:/sbin:/usr/bin:/usr/sbin
 
-CRONMAIL=/var/spool/cron/mail
+CRONMAIL=/var/spool/cron
 
 # Must be run as root.
 
@@ -21,7 +21,7 @@ process_limbo_mail()
 {
   local mailuser mailfile
 
-  cd "${CRONMAIL:-/var/spool/cron/mail}" || exit 1
+  cd "${CRONMAIL:-/var/spool/cron}" || exit 1
 
   for mailfile in cron.*
   do

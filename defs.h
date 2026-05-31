@@ -52,13 +52,13 @@
 #define SCRONTABS	"/etc/cron.d"
 #endif
 #ifndef CRONTABS
-#define CRONTABS	"/var/spool/cron/crontabs"
+#define CRONTABS	"/var/lib/cron/crontabs"
 #endif
 #ifndef CRONSTAMPS
-#define CRONSTAMPS	"/var/spool/cron/cronstamps"
+#define CRONSTAMPS	"/var/lib/cron/cronstamps"
 #endif
 #ifndef CRONMAIL
-#define CRONMAIL	"/var/spool/cron/mail"
+#define CRONMAIL	"/var/spool/cron"
 #endif
 #ifndef LOG_IDENT
 #define LOG_IDENT	"crond"
