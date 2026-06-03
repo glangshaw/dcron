@@ -22,11 +22,7 @@
 #endif
 
 #ifndef SENDMAIL
-#if defined(__DragonFly__)
 #define SENDMAIL "/usr/sbin/sendmail"
-#else
-#define SENDMAIL "/usr/lib/sendmail"
-#endif
 #endif
 
 #ifndef SENDMAIL_ARGS
