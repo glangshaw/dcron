@@ -9,7 +9,10 @@
 #define arysize(ary) (sizeof(ary) / sizeof((ary)[0]))
 
 #ifndef CRONTABS
-#define CRONTABS "/var/spool/cron/crontabs"
+#define CRONTABS "/var/lib/cron/crontabs"
+#endif
+#ifndef CRONMAIL
+#define CRONMAIL "/var/spool/cron"
 #endif
 #ifndef SCRONTABS
 #define SCRONTABS "/etc/cron.d"

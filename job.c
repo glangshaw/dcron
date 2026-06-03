@@ -28,7 +28,7 @@ void RunJob(CronFile *file, CronLine *line)
    * open mail file - owner root so nobody can screw with it.
    */
 
-  snprintf(mailFile, sizeof(mailFile), TMPDIR "/cron.%s.%d", file->cf_UserName,
+  snprintf(mailFile, sizeof(mailFile), CRONMAIL "/cron.%s.%d", file->cf_UserName,
            (int)getpid());
   mailFd =
       open(mailFile, O_CREAT | O_TRUNC | O_WRONLY | O_EXCL | O_APPEND, 0600);
@@ -118,7 +118,7 @@ void RunJob(CronFile *file, CronLine *line)
      */
     char mailFile2[128];
 
-    snprintf(mailFile2, sizeof(mailFile2), TMPDIR "/cron.%s.%d",
+    snprintf(mailFile2, sizeof(mailFile2), CRONMAIL "/cron.%s.%d",
              file->cf_UserName, line->cl_Pid);
     rename(mailFile, mailFile2);
   }
@@ -157,7 +157,7 @@ void EndJob(CronFile *file, CronLine *line)
    * End of sendmail job
    */
 
-  snprintf(mailFile, sizeof(mailFile), TMPDIR "/cron.%s.%d", file->cf_UserName,
+  snprintf(mailFile, sizeof(mailFile), CRONMAIL "/cron.%s.%d", file->cf_UserName,
            line->cl_Pid);
   line->cl_Pid = 0;
 
