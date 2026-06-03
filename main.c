@@ -9,16 +9,17 @@
  * Copyright 1994 Matthew Dillon (dillon@apollo.backplane.com)
  * May be distributed under the GNU General Public License
  */
+#include <stdlib.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <time.h>
 
 #include "defs.h"
-
-Prototype short DebugOpt;
-Prototype short LogLevel;
-Prototype short ForegroundOpt;
-Prototype const char *CDir;
-Prototype const char *SCDir;
-Prototype uid_t DaemonUid;
-Prototype int InSyncFileRoot;
+#include "subs.h"
+#include "job.h"
+#include "database.h"
 
 short DebugOpt;
 short LogLevel = 8;

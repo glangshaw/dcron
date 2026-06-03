@@ -10,7 +10,19 @@
  * May be distributed under the GNU General Public License
  */
 
+#include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <pwd.h>
+#include <err.h>
+#include <string.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/wait.h>
+
 #include "defs.h"
+#include "subs.h"
 
 const char *CDir = CRONTABS;
 int   UserId;

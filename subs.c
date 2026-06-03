@@ -6,15 +6,16 @@
  * May be distributed under the GNU General Public License
  */
 
+#include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <time.h>
+#include <errno.h>
+#include <pwd.h>
+#include <grp.h>
 #include "defs.h"
-
-Prototype void logn(int level, const char *ctl, ...);
-Prototype void log9(const char *ctl, ...);
-Prototype void logfd(int fd, const char *ctl, ...);
-Prototype void fdprintf(int fd, const char *ctl, ...);
-Prototype int ChangeUser(const char *user, short dochdir);
-Prototype void vlog(int level, int fd, const char *ctl, va_list va);
-Prototype int slog(char *buf, const char *ctl, int nmax, va_list va, short useDate);
+#include "subs.h"
 
 void 
 log9(const char *ctl, ...)

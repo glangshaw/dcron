@@ -6,10 +6,15 @@
  * May be distributed under the GNU General Public License
  */
 
-#include "defs.h"
+#include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 
-Prototype void RunJob(CronFile *file, CronLine *line);
-Prototype void EndJob(CronFile *file, CronLine *line);
+#include "defs.h"
+#include "subs.h"
+#include "job.h"
 
 void
 RunJob(CronFile *file, CronLine *line)

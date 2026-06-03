@@ -1,48 +1,31 @@
 # Makefile for dillon's cron and crontab
 #
 
-DESTDIR ?= /usr/local
-CC  = gcc
-CFLAGS = -O2 -Wall -Wstrict-prototypes
-LIB = 
-SRCS = main.c subs.c database.c job.c
-OBJS = main.o subs.o database.o job.o
-D_SRCS = crontab.c subs.c
-D_OBJS = crontab.o subs.o
-PROTOS= protos.h
-DISTTAR= /home/dillon/htdocs/FreeSrc/dcron32.tgz
+PREFIX = /usr/local
+MANDIR = $(PREFIX)/share/man
 
-all:	${PROTOS} crond crontab
+CRONTAB_GROUP = users
 
-crond:	${OBJS}
-	${CC} ${CFLAGS} -o crond ${OBJS} ${LIB}
-	strip crond
+CFLAGS = -O2 -Wall -Wextra
+CROND_OBJS = crond.o subs.o database.o job.o
+CRONTAB_OBJS = crontab.o subs.o
 
-crontab:  ${D_OBJS}
-	${CC} ${CFLAGS} -o crontab ${D_OBJS}
-	strip crontab
+all:  crond crontab
 
-protos.h: ${SRCS} ${D_SRCS}
-	fgrep -h Prototype ${SRCS} ${D_SRCS} >protos.h
+crond:	$(CROND_OBJS)
+
+crontab:  $(CRONTAB_OBJS)
 
 clean:  cleano
 	rm -f crond crontab
 
 cleano:
-	rm -f *.o dcron.tgz ${PROTOS}
+	rm -f *.o
 
-install:
-	install -o root -g wheel -m 0755 crond ${DESTDIR}/sbin/crond
-	install -o root -g wheel -m 4755 crontab ${DESTDIR}/bin/crontab
-	install -o root -g wheel -m 0644 crontab.1 ${DESTDIR}/man/man1/crontab.1
-	install -o root -g wheel -m 0644 crond.8 ${DESTDIR}/man/man8/crond.8
+install: crond crontab
+	install -o root -g root -m 0755 crond $(DESTDIR)$(PREFIX)/sbin/crond
+	install -o root -g $(CRONTAB_GROUP) -m 4750 crontab $(DESTDIR)$(PREFIX)/bin/crontab
+	install -o root -g root -m 0644 crontab.1 $(DESTDIR)$(MANDIR)/man1/crontab.1
+	install -o root -g root -m 0644 crond.8 $(DESTDIR)$(MANDIR)/man8/crond.8
 
-# dillon-specific
-#
-
-tar: clean
-	(cd ..; tar czf ${DISTTAR}.new dcron)
-	chown dillon ${DISTTAR}.new
-	chmod 644 ${DISTTAR}.new
-	mv -f ${DISTTAR}.new ${DISTTAR}
-
+include depend.mk

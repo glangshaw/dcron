@@ -6,14 +6,21 @@
  * May be distributed under the GNU General Public License
  */
 
+#include <stdlib.h>
+#include <stdio.h>
+#include <dirent.h>
+#include <string.h>
 #include <limits.h>
-#include "defs.h"
+#include <time.h>
+#include <pwd.h>
+#include <sys/stat.h>
+#include <sys/wait.h>
 
-Prototype void CheckUpdates(const char *dpath, const char *user_override);
-Prototype void SynchronizeDir(const char *dpath, const char *user_override, int initial_scan);
-Prototype int TestJobs(time_t t1, time_t t2);
-Prototype void RunJobs(void);
-Prototype int CheckJobs(void);
+
+#include "defs.h"
+#include "subs.h"
+#include "job.h"
+#include "database.h"
 
 void SynchronizeFile(const char *dpath, const char *fname, const char *uname);
 void DeleteFile(CronFile **pfile);

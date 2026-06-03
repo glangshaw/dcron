@@ -6,25 +6,6 @@
  * May be distributed under the GNU General Public License
  */
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/ioctl.h>
-#include <sys/wait.h>
-#include <sys/resource.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <string.h>
-#include <errno.h>
-#include <time.h>
-#include <dirent.h>
-#include <fcntl.h>
-#include <pwd.h>
-#include <unistd.h>
-#include <grp.h>
-#include <err.h>
-
-#define Prototype extern
 #define arysize(ary)	(sizeof(ary)/sizeof((ary)[0]))
 
 #ifndef CRONTABS
@@ -91,5 +72,8 @@ typedef struct CronLine {
 #define RUN_RUNNING	2
 #define RUN_FAILED	3
 
-#include "protos.h"
+extern short LogLevel;
+extern short DebugOpt;
 
+#include <sys/types.h>
+extern uid_t DaemonUid;
