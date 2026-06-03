@@ -1,6 +1,6 @@
 
 /*
- * MAIN.C
+ * crond.c
  *
  * dcron -d[#] -c <crondir> [ -f | -b ]
  *
