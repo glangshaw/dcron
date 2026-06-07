@@ -1,3 +1,5 @@
+#ifndef DEFS_H
+#define DEFS_H
 
 /*
  * DEFS.H
@@ -78,3 +80,6 @@ extern short DebugOpt;
 
 #include <sys/types.h>
 extern uid_t DaemonUid;
+
+#endif  /* DEFS_H */
+         
