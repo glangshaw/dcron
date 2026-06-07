@@ -375,5 +375,5 @@ void EditFile(const char *user, const char *file)
     perror("fork");
     exit(1);
   }
-  wait4(pid, NULL, 0, NULL);
+  waitpid(pid, NULL, 0);
 }

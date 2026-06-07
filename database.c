@@ -594,7 +594,7 @@ int CheckJobs(void)
         if (line->cl_Pid > 0)
         {
           int status;
-          int r = wait4(line->cl_Pid, &status, WNOHANG, NULL);
+          int r = waitpid(line->cl_Pid, &status, WNOHANG);
 
           if (r < 0 || r == line->cl_Pid)
           {
