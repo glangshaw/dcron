@@ -8,7 +8,6 @@
  * May be distributed under the GNU General Public License
  */
 
-#define arysize(ary) (sizeof(ary) / sizeof((ary)[0]))
 
 #ifndef CRONTABS
 #define CRONTABS "/var/lib/cron/crontabs"

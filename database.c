@@ -20,6 +20,7 @@
 #include <sys/wait.h>
 #include <time.h>
 
+#define ARYSIZE(ary) (sizeof(ary) / sizeof((ary)[0]))
 
 void SynchronizeFile(const char *dpath, const char *fname, const char *uname);
 void DeleteFile(CronFile **pfile);
@@ -413,7 +414,7 @@ void FixDayDow(CronLine *line)
   short weekUsed = 0;
   short daysUsed = 0;
 
-  for (i = 0; i < arysize(line->cl_Dow); ++i)
+  for (i = 0; i < ARYSIZE(line->cl_Dow); ++i)
   {
     if (line->cl_Dow[i] == 0)
     {
@@ -421,7 +422,7 @@ void FixDayDow(CronLine *line)
       break;
     }
   }
-  for (i = 0; i < arysize(line->cl_Days); ++i)
+  for (i = 0; i < ARYSIZE(line->cl_Days); ++i)
   {
     if (line->cl_Days[i] == 0)
     {
