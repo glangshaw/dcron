@@ -9,6 +9,12 @@
  * Copyright 1994 Matthew Dillon (dillon@apollo.backplane.com)
  * May be distributed under the GNU General Public License
  */
+
+#include "database.h"
+#include "defs.h"
+#include "job.h"
+#include "subs.h"
+
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,10 +22,9 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "database.h"
-#include "defs.h"
-#include "job.h"
-#include "subs.h"
+#ifndef RESCAN_INTERVAL
+#define RESCAN_INTERVAL 3600
+#endif
 
 short DebugOpt;
 short LogLevel = 8;
@@ -28,6 +33,71 @@ const char *CDir = CRONTABS;
 const char *SCDir = SCRONTABS;
 uid_t DaemonUid;
 int InSyncFileRoot;
+
+void RunMainLoop()
+{
+  time_t t1;
+  time_t t2;
+  time_t rescan; /* time of last rescan */
+  long dt;
+  short stime = 60;
+
+  rescan = t1 = time(NULL);
+
+  for (;;)
+  {
+    /* synchronize to 1 second after the minute, minimum sleep of 1 second. */
+    sleep((stime + 1) - (short)(time(NULL) % stime));
+
+    t2 = time(NULL);
+    dt = t2 - t1;
+
+    /*
+     * The file 'cron.update' is checked to determine new cron
+     * jobs.  The directory is rescanned once an hour to deal
+     * with any screwups.
+     *
+     * check for disparity.  Disparities over an hour either way
+     * result in resynchronization.  A reverse-indexed disparity
+     * less then an hour causes us to effectively sleep until we
+     * match the original time (i.e. no re-execution of jobs that
+     * have just been run).  A forward-indexed disparity less then
+     * an hour causes intermediate jobs to be run, but only once
+     * in the worst case.
+     *
+     * when running jobs, the inequality used is greater but not
+     * equal to t1, and less then or equal to t2.
+     */
+
+    if (rescan + RESCAN_INTERVAL <= t2 && CheckJobs() == 0)
+    {
+      rescan = t2;
+      SynchronizeDir(CDir, NULL, 0);
+      SynchronizeDir(SCDir, "root", 0);
+    }
+    CheckUpdates(CDir, NULL);
+    CheckUpdates(SCDir, "root");
+    if (DebugOpt)
+      logn(5, "Wakeup dt=%d\n", dt);
+    if (dt < -60 * 60 || dt > 60 * 60)
+    {
+      rescan = 0;
+      t1 = t2;
+      log9("time disparity of %d minutes detected\n", dt / 60);
+    }
+    else if (dt > 0)
+    {
+      TestJobs(t1, t2);
+      RunJobs();
+      sleep(5);
+      if (CheckJobs() > 0)
+        stime = 10;
+      else
+        stime = 60;
+      t1 = t2;
+    }
+  }
+}
 
 int main(int ac, char **av)
 {
@@ -133,73 +203,11 @@ int main(int ac, char **av)
       exit(0);
   }
 
-  /*
-   * main loop - synchronize to 1 second after the minute, minimum sleep
-   *             of 1 second.
-   */
-
   log9("%s " VERSION " dillon, started\n", av[0]);
   SynchronizeDir(CDir, NULL, 1);
   SynchronizeDir(SCDir, "root", 1);
 
-  {
-    time_t t1 = time(NULL);
-    time_t t2;
-    long dt;
-    short rescan = 60;
-    short stime = 60;
+  RunMainLoop(); /* does not return */
 
-    for (;;)
-    {
-      sleep((stime + 1) - (short)(time(NULL) % stime));
-
-      t2 = time(NULL);
-      dt = t2 - t1;
-
-      /*
-       * The file 'cron.update' is checked to determine new cron
-       * jobs.  The directory is rescanned once an hour to deal
-       * with any screwups.
-       *
-       * check for disparity.  Disparities over an hour either way
-       * result in resynchronization.  A reverse-indexed disparity
-       * less then an hour causes us to effectively sleep until we
-       * match the original time (i.e. no re-execution of jobs that
-       * have just been run).  A forward-indexed disparity less then
-       * an hour causes intermediate jobs to be run, but only once
-       * in the worst case.
-       *
-       * when running jobs, the inequality used is greater but not
-       * equal to t1, and less then or equal to t2.
-       */
-
-      if (--rescan == 0)
-      {
-        rescan = 60;
-        SynchronizeDir(CDir, NULL, 0);
-        SynchronizeDir(SCDir, "root", 0);
-      }
-      CheckUpdates(CDir, NULL);
-      CheckUpdates(SCDir, "root");
-      if (DebugOpt)
-        logn(5, "Wakeup dt=%d\n", dt);
-      if (dt < -60 * 60 || dt > 60 * 60)
-      {
-        t1 = t2;
-        log9("time disparity of %d minutes detected\n", dt / 60);
-      }
-      else if (dt > 0)
-      {
-        TestJobs(t1, t2);
-        RunJobs();
-        sleep(5);
-        if (CheckJobs() > 0)
-          stime = 10;
-        else
-          stime = 60;
-        t1 = t2;
-      }
-    }
-  }
-  /* not reached */
+  return 1;
 }
