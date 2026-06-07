@@ -6,15 +6,15 @@
  * May be distributed under the GNU General Public License
  */
 
+#include "job.h"
+#include "subs.h"
+#include "defs.h"
+
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <unistd.h>
-
-#include "defs.h"
-#include "job.h"
-#include "subs.h"
 
 void RunJob(CronFile *file, CronLine *line)
 {
