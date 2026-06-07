@@ -368,7 +368,7 @@ char *ParseField(char *user, char *ary, int modvalue, int off,
 
         if (--s0 == 0)
         {
-          ary[n1 % modvalue] = 1;
+          ary[n1] = 1;
           s0 = skip;
         }
       } while (n1 != n2 && --failsafe);
