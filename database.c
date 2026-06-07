@@ -5,6 +5,10 @@
  * Copyright 1994 Matthew Dillon (dillon@apollo.backplane.com)
  * May be distributed under the GNU General Public License
  */
+#include "database.h"
+#include "subs.h"
+#include "defs.h"
+#include "job.h"
 
 #include <dirent.h>
 #include <limits.h>
@@ -16,10 +20,6 @@
 #include <sys/wait.h>
 #include <time.h>
 
-#include "database.h"
-#include "defs.h"
-#include "job.h"
-#include "subs.h"
 
 void SynchronizeFile(const char *dpath, const char *fname, const char *uname);
 void DeleteFile(CronFile **pfile);
