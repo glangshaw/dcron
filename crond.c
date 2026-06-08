@@ -82,7 +82,7 @@ void RunMainLoop()
     {
       rescan = 0;
       t1 = t2;
-      log9("time disparity of %d minutes detected\n", dt / 60);
+      logn(9, "time disparity of %d minutes detected\n", dt / 60);
     }
     else if (dt > 0)
     {
@@ -183,7 +183,8 @@ int main(int argc, char **argv)
       exit(0);
   }
 
-  log9("%s " VERSION " dillon, started\n", argv[0]);
+
+  logn(9, "%s " VERSION " dillon, started\n", argv[0]);
 
   SynchronizeDir(CDir, NULL, 1);
   SynchronizeDir(SCDir, "root", 1);

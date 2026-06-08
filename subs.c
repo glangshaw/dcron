@@ -17,14 +17,9 @@
 #include <time.h>
 #include <unistd.h>
 
-void log9(const char *ctl, ...)
-{
-  va_list va;
+static void vlog(int level, int fd, const char *ctl, va_list va);
+static int slog(char *buf, const char *ctl, int nmax, va_list va, short useDate);
 
-  va_start(va, ctl);
-  vlog(9, 2, ctl, va);
-  va_end(va);
-}
 
 void logn(int level, const char *ctl, ...)
 {
@@ -55,7 +50,7 @@ void fdprintf(int fd, const char *ctl, ...)
   va_end(va);
 }
 
-void vlog(int level, int fd, const char *ctl, va_list va)
+static void vlog(int level, int fd, const char *ctl, va_list va)
 {
   char buf[2048];
   short n;

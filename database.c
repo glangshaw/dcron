@@ -138,7 +138,7 @@ void SynchronizeDir(const char *dpath, const char *user_override,
   else
   {
     if (initial_scan)
-      log9("Unable to scan directory %s!\n", dpath);
+      logn(9, "Unable to scan directory %s!\n", dpath);
     /* softerror, do not exit the program */
   }
 }
@@ -217,7 +217,7 @@ void SynchronizeFile(const char *dpath, const char *fileName,
         bzero(&line, sizeof(line));
 
         if (DebugOpt)
-          log9("User %s Entry %s\n", userName, buf);
+          logn(9, "User %s Entry %s\n", userName, buf);
 
         /*
          * parse date ranges
@@ -254,7 +254,7 @@ void SynchronizeFile(const char *dpath, const char *fileName,
 
         if (DebugOpt)
         {
-          log9("    Command %s\n", ptr);
+          logn(9, "    Command %s\n", ptr);
         }
 
         pline = &((*pline)->cl_Next);
@@ -265,7 +265,7 @@ void SynchronizeFile(const char *dpath, const char *fileName,
       FileBase = file;
 
       if (maxLines == 0 || maxEntries == 0)
-        log9("Maximum number of lines reached for user %s\n", userName);
+        logn(9, "Maximum number of lines reached for user %s\n", userName);
     }
     fclose(fi);
   }
@@ -333,7 +333,7 @@ char *ParseField(char *user, char *ary, int modvalue, int off,
 
     if (skip == 0)
     {
-      log9("failed user %s parsing %s\n", user, base);
+      logn(9, "failed user %s parsing %s\n", user, base);
       return (NULL);
     }
     if (*ptr == '-' && n2 < 0)
@@ -376,7 +376,7 @@ char *ParseField(char *user, char *ary, int modvalue, int off,
 
       if (failsafe == 0)
       {
-        log9("failed user %s parsing %s\n", user, base);
+        logn(9, "failed user %s parsing %s\n", user, base);
         return (NULL);
       }
     }
@@ -389,7 +389,7 @@ char *ParseField(char *user, char *ary, int modvalue, int off,
 
   if (*ptr != ' ' && *ptr != '\t' && *ptr != '\n')
   {
-    log9("failed user %s parsing %s\n", user, base);
+    logn(9, "failed user %s parsing %s\n", user, base);
     return (NULL);
   }
 

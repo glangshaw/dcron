@@ -57,7 +57,7 @@ void RunJob(CronFile *file, CronLine *line)
 
     if (ChangeUser(file->cf_UserName, 1) < 0)
     {
-      log9("ChangeUser failed (%s): %s\n", file->cf_UserName, line->cl_Shell);
+      logn(9, "ChangeUser failed (%s): %s\n", file->cf_UserName, line->cl_Shell);
       exit(0);
     }
 
@@ -105,7 +105,7 @@ void RunJob(CronFile *file, CronLine *line)
     /*
      * PARENT, FORK FAILED
      */
-    log9("couldn't fork, user %s\n", file->cf_UserName);
+    logn(9, "couldn't fork, user %s\n", file->cf_UserName);
     line->cl_Pid = 0;
     remove(mailFile);
   }
@@ -198,7 +198,7 @@ void EndJob(CronFile *file, CronLine *line)
 
     if (ChangeUser(file->cf_UserName, 1) < 0)
     {
-      log9("ChangeUser failed (%s), unable to send mail\n", file->cf_UserName);
+      logn(9, "ChangeUser failed (%s), unable to send mail\n", file->cf_UserName);
       exit(0);
     }
 
@@ -233,7 +233,7 @@ void EndJob(CronFile *file, CronLine *line)
     /*
      * PARENT, FORK FAILED
      */
-    log9("unable to fork, user %s", file->cf_UserName);
+    logn(9, "unable to fork, user %s", file->cf_UserName);
     line->cl_Pid = 0;
   }
   else
