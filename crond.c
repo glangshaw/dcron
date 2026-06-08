@@ -1,4 +1,3 @@
-
 /*
  * crond.c
  *
@@ -99,9 +98,11 @@ void RunMainLoop()
   }
 }
 
-int main(int ac, char **av)
+int main(int argc, char **argv)
 {
+  extern char *optarg;
   int i;
+  int opt;
 
   /*
    * parse options
@@ -109,53 +110,32 @@ int main(int ac, char **av)
 
   DaemonUid = getuid();
 
-  for (i = 1; i < ac; ++i)
+  while ((opt = getopt(argc, argv, "bc:dfl:s:")) != -1)
   {
-    char *ptr = av[i];
-
-    if (*ptr == '-')
+    switch (opt)
     {
-      ptr += 2;
-
-      switch (ptr[-1])
-      {
-      case 'l':
-        LogLevel = (*ptr) ? strtol(ptr, NULL, 0) : 1;
-        continue;
-      case 'd':
-        DebugOpt = (*ptr) ? strtol(ptr, NULL, 0) : 1;
-        LogLevel = 0;
-        /* fall through */
-      case 'f':
-        ForegroundOpt = 1;
-        continue;
-      case 'b':
-        ForegroundOpt = 0;
-        continue;
-      case 'c':
-        CDir = (*ptr) ? ptr : av[++i];
-        continue;
-      case 's':
-        SCDir = (*ptr) ? ptr : av[++i];
-        continue;
-      default:
-        break;
-      }
+    case 'b':
+      ForegroundOpt = 0;
+      break;
+    case 'd':
+      DebugOpt = 1;
+      LogLevel = 0;
+      /* intentional fall-through */
+    case 'f':
+      ForegroundOpt = 1;
+      break;
+    case 'c':
+      CDir = optarg;
+      break;
+    case 's':
+      SCDir = optarg;
+      break;
+    case 'l':
+      LogLevel = strtol(optarg, NULL, 10);
+      break;
+    default:
+      break;
     }
-    break; /* error */
-  }
-
-  /*
-   * check for parse error
-   */
-
-  if (i != ac)
-  {
-    if (i > ac)
-      puts("expected argument for option");
-    printf("dcron " VERSION "\n");
-    printf("dcron -d[#] -l[#] -f -b -c dir -s dir\n");
-    exit(1);
   }
 
   /*
@@ -203,7 +183,8 @@ int main(int ac, char **av)
       exit(0);
   }
 
-  log9("%s " VERSION " dillon, started\n", av[0]);
+  log9("%s " VERSION " dillon, started\n", argv[0]);
+
   SynchronizeDir(CDir, NULL, 1);
   SynchronizeDir(SCDir, "root", 1);
 

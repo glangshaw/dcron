@@ -4,7 +4,7 @@
 .SH NAME
 crond \- cron daemon (Dillon's Cron)
 .SH SYNOPSIS
-.B crond [-l#] [-d[#]] [-f] [-b] [-c directory]
+.B crond [-l#] [-d] [-f] [-b] [-c directory]
 .SH OPTIONS
 .B crond
 is a background daemon that parses individual crontab files and
@@ -13,10 +13,10 @@ executes commands on behalf of the users in question.
 .B "-l<loglevel> "
 set logging level, default is 8.
 .TP 0.5i
-.B "-d[<debuglevel>] "
-set debugging level, default is 0, if no level specified with -d
-option default is 1.  This option also sets the logging level to
-0 and causes crond to run in the foreground.
+.B "-d"
+enable debugging level.
+This option also sets the logging level to 0 and causes crond to run
+in the foreground.
 .TP 0.5i
 .B "-f "
 run crond in the foreground.
