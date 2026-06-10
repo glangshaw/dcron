@@ -117,23 +117,17 @@ CheckUpdates(const char *dpath, const char *user_override, time_t t1, time_t t2)
 		remove(path);
 		printlogf(LOG_INFO, "reading %s/%s\n", dpath, CRONUPDATE);
 		while (fgets(buf, sizeof(buf), fi) != NULL) {
-			/*
-			 * if buf has only sep chars, return NULL and point ptok at buf's terminating 0
-			 * else return pointer to first non-sep of buf and
-			 * 		if there's a following sep, overwrite it to 0 and point ptok to next char
-			 * 		else point ptok at buf's terminating 0
-			 */
 			fname = strtok_r(buf, " \t\n", &ptok);
-
+            job = strtok_r(NULL, " \t\n", &ptok);
 			if (user_override)
 				SynchronizeFile(dpath, fname, user_override);
 			else if (!getpwnam(fname))
 				printlogf(LOG_WARNING, "ignoring %s/%s (non-existent user)\n", dpath, fname);
-			else if (*ptok == 0 || *ptok == '\n') {
+			else if (job == NULL ) {
 				SynchronizeFile(dpath, fname, fname);
 				ReadTimestamps(fname);
 			} else {
-				/* if fname is followed by whitespace, we prod any following jobs */
+				/* prod any following jobs */
 				CronFile *file = FileBase;
 				while (file) {
 					if (strcmp(file->cf_UserName, fname) == 0)
@@ -144,10 +138,8 @@ CheckUpdates(const char *dpath, const char *user_override, time_t t1, time_t t2)
 					printlogf(LOG_WARNING, "unable to prod for user %s: no crontab\n", fname);
 				else {
 					CronLine *line;
-					/* calling strtok(ptok...) then strtok(NULL) is equiv to calling strtok_r(NULL,..&ptok) */
-					while ((job = strtok(ptok, " \t\n")) != NULL) {
+					while (job) {
 						time_t force = t2;
-						ptok = NULL;
 						if (*job == '!') {
 							force = (time_t)-1;
 							++job;
@@ -164,7 +156,8 @@ CheckUpdates(const char *dpath, const char *user_override, time_t t1, time_t t2)
 							printlogf(LOG_WARNING, "unable to prod for user %s: unknown job %s\n", fname, job);
 							/* we can continue parsing this line, we just don't install any CronWaiter for the requested job */
 						}
-					}
+                        job = strtok_r(NULL, " \t\n", &ptok);
+                    }
 				}
 			}
 		}
