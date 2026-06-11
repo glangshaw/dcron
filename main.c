@@ -59,6 +59,7 @@ void RunMainLoop( void )
     rescan = t1 = time(NULL);
 
     for (;;) {
+        /* synchronize to 1 second after the minute, minimum sleep of 1 second. */
         sleep((stime + 1) - (short)(time(NULL) % stime));
 
         t2 = time(NULL);
@@ -334,12 +335,6 @@ main(int ac, char **av)
 	for (i = 3; i < MAXOPEN; ++i) {
         close(i);
     }
-
-
-	/*
-	 * main loop - synchronize to 1 second after the minute, minimum sleep
-	 *             of 1 second.
-	 */
 
 	printlogf(LOG_NOTICE,"%s " VERSION " dillon's cron daemon, started with loglevel %s\n", av[0], LevelAry[LogLevel]);
 	SynchronizeDir(CDir, NULL, 1);
