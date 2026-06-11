@@ -20,6 +20,7 @@
 #define _DEFAULT_SOURCE 1
 #define _BSD_SOURCE 1
 
+#include <sys/file.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>

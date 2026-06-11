@@ -45,6 +45,8 @@ const char *Mailto = NULL;
 const char *MailFileFmt = CRONMAIL "/cron.%s.%d" ;
 const char *TempDir = TMPDIR;
 
+int CDirFD;
+int SCDirFD;
 uid_t DaemonUid;
 pid_t DaemonPid;
 
@@ -93,8 +95,8 @@ void RunMainLoop( void )
             SynchronizeDir(SCDir, "root", 0);
             ReadTimestamps(NULL);
         } else {
-            CheckUpdates(CDir, NULL, t1, t2);
-            CheckUpdates(SCDir, "root", t1, t2);
+            CheckUpdates(CDir, CDirFD, NULL, t1, t2);
+            CheckUpdates(SCDir, SCDirFD, "root", t1, t2);
         }
         if (DebugOpt)
             printlogf(LOG_DEBUG, "Wakeup dt=%d\n", dt);
@@ -337,7 +339,15 @@ main(int ac, char **av)
     }
 
 	printlogf(LOG_NOTICE,"%s " VERSION " dillon's cron daemon, started with loglevel %s\n", av[0], LevelAry[LogLevel]);
-	SynchronizeDir(CDir, NULL, 1);
+
+	/* open crontab directory file descriptors for locking */
+
+    if ((CDirFD = open(CDir, O_DIRECTORY|O_RDONLY|O_CLOEXEC)) < 0 )
+		printlogf(LOG_ERR," Couldn't open %s - locking disabled.\n", CDir);
+    if ((SCDirFD = open(SCDir, O_DIRECTORY|O_RDONLY|O_CLOEXEC)) < 0 )
+		printlogf(LOG_ERR," Couldn't open %s - locking disabled.\n", SCDir);
+
+    SynchronizeDir(CDir, NULL, 1);
 	SynchronizeDir(SCDir, "root", 1);
 	ReadTimestamps(NULL);
 	TestStartupJobs(); /* @startup jobs only run when crond is started, not when their crontab is loaded */

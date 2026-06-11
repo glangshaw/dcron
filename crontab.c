@@ -12,7 +12,6 @@
  */
 
 #include "defs.h"
-#include <sys/file.h>
 
 Prototype void printlogf(int level, const char *ctl, ...);
 
@@ -271,24 +270,19 @@ main(int ac, char **av)
 
 	if (option == REPLACE || option == DELETE) {
 		FILE *fo;
-		struct stat st;
 
-		while ((fo = fopen(CRONUPDATE, "a"))) {
-			fprintf(fo, "%s\n", pas->pw_name);
-			fflush(fo);
-			if (fstat(fileno(fo), &st) != 0 || st.st_nlink != 0) {
-				fclose(fo);
-				break;
-			}
-			fclose(fo);
-			/* loop */
-		}
-		if (fo == NULL) {
-			fprintf(stderr, "unable to append to %s/%s\n", CDir, CRONUPDATE);
-		}
-	}
-	exit(0);
-	/* not reached */
+        int lockfd = open(CDir, O_DIRECTORY|O_RDONLY|O_CLOEXEC);
+        if ( lockfd > 0 && flock(lockfd, LOCK_EX) == 0 ) {
+            if ( (fo = fopen(CRONUPDATE, "a")) != NULL ) {
+                fprintf(fo, "%s\n", pas->pw_name);
+                fclose(fo);
+            } else
+                fprintf(stderr, "unable to append to %s/%s\n", CDir, CRONUPDATE);
+            close(lockfd);  /* implicit LOCK_UN */
+        }
+    }
+
+	return 0;
 }
 
 void

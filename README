@@ -156,10 +156,10 @@ it logs all events <= loglevel NOTICE to syslog.
 The crontab files are normally located in /var/lib/cron/crontabs, and timestamps
 are normally in /var/lib/cron/cronstamps. These directories normally have permissions:
 
-	drwxr-xr-x  2 root   root     4096 Jan  6 18:50 /var/spool/cron
-	drwxr-xr-x  1 root   root        0 Jan  6 18:58 /var/lib/cron/crontabs
-	drwxr-xr-x  1 root   root        0 Jan  6 18:58 /var/lib/cron/cronstamps/
-	drwxr-xr-x  1 root   root        0 Jan  6 18:58 /var/spool/cron
+	drwx------  2 root   root     4096 Jan  6 18:50 /var/spool/cron
+	drwx------  1 root   root        0 Jan  6 18:58 /var/lib/cron/crontabs
+	drwx------  1 root   root        0 Jan  6 18:58 /var/lib/cron/cronstamps/
+	drwx------  1 root   root        0 Jan  6 18:58 /var/spool/cron
 
 Here is the superuser's crontab, created using `sudo crontab -e`:
 

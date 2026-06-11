@@ -17,7 +17,7 @@
 #define LAST_DOW   (1 << 5)
 #define ALL_DOW    (FIRST_DOW|SECOND_DOW|THIRD_DOW|FOURTH_DOW|FIFTH_DOW|LAST_DOW)
 
-Prototype void CheckUpdates(const char *dpath, const char *user_override, time_t t1, time_t t2);
+Prototype void CheckUpdates(const char *dpath, const int lockfd, const char *user_override, time_t t1, time_t t2);
 Prototype void SynchronizeDir(const char *dpath, const char *user_override, int initial_scan);
 Prototype void ReadTimestamps(const char *user);
 Prototype int TestJobs(time_t t1, time_t t2);
@@ -101,7 +101,7 @@ const char *FreqAry[] = {
  * the file, otherwise they belong to the user_override user.
  */
 void
-CheckUpdates(const char *dpath, const char *user_override, time_t t1, time_t t2)
+CheckUpdates(const char *dpath, const int lockfd, const char *user_override, time_t t1, time_t t2)
 {
 	FILE *fi;
 	char buf[SMALL_BUFFER];
@@ -113,55 +113,61 @@ CheckUpdates(const char *dpath, const char *user_override, time_t t1, time_t t2)
 		perror("CheckUpdates");
 		exit(1);
 	}
-	if ((fi = fopen(path, "r")) != NULL) {
-		remove(path);
-		printlogf(LOG_INFO, "reading %s/%s\n", dpath, CRONUPDATE);
-		while (fgets(buf, sizeof(buf), fi) != NULL) {
-			fname = strtok_r(buf, " \t\n", &ptok);
-            job = strtok_r(NULL, " \t\n", &ptok);
-			if (user_override)
-				SynchronizeFile(dpath, fname, user_override);
-			else if (!getpwnam(fname))
-				printlogf(LOG_WARNING, "ignoring %s/%s (non-existent user)\n", dpath, fname);
-			else if (job == NULL ) {
-				SynchronizeFile(dpath, fname, fname);
-				ReadTimestamps(fname);
-			} else {
-				/* prod any following jobs */
-				CronFile *file = FileBase;
-				while (file) {
-					if (strcmp(file->cf_UserName, fname) == 0)
-						break;
-					file = file->cf_Next;
-				}
-				if (!file)
-					printlogf(LOG_WARNING, "unable to prod for user %s: no crontab\n", fname);
-				else {
-					CronLine *line;
-					while (job) {
-						time_t force = t2;
-						if (*job == '!') {
-							force = (time_t)-1;
-							++job;
+
+    if ( lockfd == -1 || flock(lockfd, LOCK_EX|LOCK_NB) == 0 ) {
+		if ((fi = fopen(path, "r")) != NULL) {
+			remove(path);
+			printlogf(LOG_INFO, "reading %s/%s\n", dpath, CRONUPDATE);
+			while (fgets(buf, sizeof(buf), fi) != NULL) {
+				fname = strtok_r(buf, " \t\n", &ptok);
+				job = strtok_r(NULL, " \t\n", &ptok);
+				if (user_override)
+					SynchronizeFile(dpath, fname, user_override);
+				else if (!getpwnam(fname))
+					printlogf(LOG_WARNING, "ignoring %s/%s (non-existent user)\n", dpath, fname);
+				else if (job == NULL ) {
+					SynchronizeFile(dpath, fname, fname);
+					ReadTimestamps(fname);
+				} else {
+					/* prod any following jobs */
+					CronFile *file = FileBase;
+					while (file) {
+						if (strcmp(file->cf_UserName, fname) == 0)
+							break;
+						file = file->cf_Next;
+					}
+					if (!file)
+						printlogf(LOG_WARNING, "unable to prod for user %s: no crontab\n", fname);
+					else {
+						CronLine *line;
+						while (job) {
+							time_t force = t2;
+							if (*job == '!') {
+								force = (time_t)-1;
+								++job;
+							}
+							line = file->cf_LineBase;
+							while (line) {
+								if (line->cl_JobName && strcmp(line->cl_JobName, job) == 0)
+									break;
+								line = line->cl_Next;
+							}
+							if (line)
+								ArmJob(file, line, t1, force);
+							else {
+								printlogf(LOG_WARNING, "unable to prod for user %s: unknown job %s\n", fname, job);
+								/* we can continue parsing this line, we just don't install any CronWaiter for the requested job */
+							}
+							job = strtok_r(NULL, " \t\n", &ptok);
 						}
-						line = file->cf_LineBase;
-						while (line) {
-							if (line->cl_JobName && strcmp(line->cl_JobName, job) == 0)
-								break;
-							line = line->cl_Next;
-						}
-						if (line)
-							ArmJob(file, line, t1, force);
-						else {
-							printlogf(LOG_WARNING, "unable to prod for user %s: unknown job %s\n", fname, job);
-							/* we can continue parsing this line, we just don't install any CronWaiter for the requested job */
-						}
-                        job = strtok_r(NULL, " \t\n", &ptok);
-                    }
+					}
 				}
 			}
+			fclose(fi);
 		}
-		fclose(fi);
+        flock(lockfd, LOCK_UN);
+    } else {
+		printlogf(LOG_WARNING, "CheckUpdates skipped for %s - locking failure\n", dpath);
 	}
 	free(path);
 }
