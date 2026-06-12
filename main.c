@@ -58,7 +58,8 @@ void RunMainLoop( void )
     long dt;
     short stime = INACTIVE_SLEEP_PERIOD;
 
-    rescan = t1 = time(NULL);
+    t1 = time(NULL);
+    rescan = t1 - t1 % RESCAN_INTERVAL; 
 
     for (;;) {
         /* synchronize to 1 second after the minute, minimum sleep of 1 second. */
