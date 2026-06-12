@@ -1,3 +1,7 @@
+git 5.x 12-June-2026
+  * prevent rescans drifting off the hour if a rescan is delayed
+    by running jobs.
+
 v5.1 12-June-2026
 
   * Restore missing month check when running jobs. It had been

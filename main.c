@@ -91,7 +91,7 @@ void RunMainLoop( void )
             * the job pids, testing CheckJobs() will avoid that, deffering
             * the rescan until there are no running jobs.
             */
-            rescan = t2;
+            rescan = t2 - t2 % RESCAN_INTERVAL;
             SynchronizeDir(CDir, NULL, 0);
             SynchronizeDir(SCDir, "root", 0);
             ReadTimestamps(NULL);
