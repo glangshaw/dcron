@@ -52,7 +52,7 @@ main(int ac, char **av)
 	/* [v]snprintf write at most size including \0; they'll null-terminate, even when they truncate */
 	/* return value >= size means result was truncated */
 	if (snprintf(caller, sizeof(caller), "%s", pas->pw_name) >= sizeof(caller)) {
-		printlogf(0, "username '%s' too long", caller);
+		printlogf(0, "username '%s' too long\n", caller);
 		exit(1);
 	}
 
@@ -89,11 +89,11 @@ main(int ac, char **av)
 							exit(1);
 						}
 					} else {
-						printlogf(0, "user '%s' unknown", optarg);
+						printlogf(0, "user '%s' unknown\n", optarg);
 						exit(1);
 					}
 				} else {
-					printlogf(0, "-u option: superuser only");
+					printlogf(0, "-u option: superuser only\n");
 					exit(1);
 				}
 				break;
@@ -102,7 +102,7 @@ main(int ac, char **av)
 				if (*optarg != 0 && getuid() == geteuid()) {
 					CDir = optarg;
 				} else {
-					printlogf(0, "-c option: superuser only");
+					printlogf(0, "-c option: superuser only\n");
 					exit(1);
 				}
 				break;
@@ -133,7 +133,7 @@ main(int ac, char **av)
 	if (repFile) {
 		repFd = GetReplaceStream(caller, repFile);
 		if (repFd < 0) {
-			printlogf(0, "unable to read replacement file %s", repFile);
+			printlogf(0, "unable to read replacement file %s\n", repFile);
 			exit(1);
 		}
 	}
@@ -143,7 +143,7 @@ main(int ac, char **av)
 	 */
 
 	if (chdir(CDir) < 0) {
-		printlogf(0, "cannot change dir to %s: %s", CDir, strerror(errno));
+		printlogf(0, "cannot change dir to %s: %s\n", CDir, strerror(errno));
 		exit(1);
 	}
 
@@ -154,14 +154,14 @@ main(int ac, char **av)
 	if ( option == EDIT || option == REPLACE ) {
 		lockFd = open(pas->pw_name, O_CREAT|O_RDONLY|O_CLOEXEC, 0600 );
 		if ( lockFd == -1 ) {
-			fprintf(stderr, "could not open crontab: %s\n", pas->pw_name);
+			printlogf(0, "could not open crontab: %s\n", pas->pw_name);
 			exit(1);
 		}
 		if ( flock(lockFd, LOCK_EX|LOCK_NB) != 0 ) {
 			if ( errno = EWOULDBLOCK ) {
-				fprintf(stderr, "crontab %s in use - try again later.\n", pas->pw_name);
+				printlogf(0, "crontab %s in use - try again later.\n", pas->pw_name);
 			} else {
-				fprintf(stderr, "lock failed for crontab: %s\n", pas->pw_name);
+				printlogf(0, "lock failed for crontab: %s\n", pas->pw_name);
 			}
 			exit(1);
 		}
@@ -182,7 +182,7 @@ main(int ac, char **av)
 						fputs(buf, stdout);
 					fclose(fi);
 				} else {
-					fprintf(stderr, "no crontab for %s\n", pas->pw_name);
+					printlogf(0, "no crontab for %s\n", pas->pw_name);
 					/* no error code */
 				}
 			}
@@ -212,7 +212,7 @@ main(int ac, char **av)
 					lseek(fd, 0L, 0);
 					repFd = fd;
 				} else {
-					printlogf(0, "unable to create %s: %s", tmp, strerror(errno));
+					printlogf(0, "unable to create %s: %s\n", tmp, strerror(errno));
 					exit(1);
 				}
 
@@ -246,7 +246,7 @@ main(int ac, char **av)
 					close(NewFd);
 					rename(NewPath, pas->pw_name);
 				} else {
-					fprintf(stderr, "unable to create %s/%s: %s\n",
+					printlogf(0, "unable to create %s/%s: %s\n",
 							CDir,
 							NewPath,
 							strerror(errno)
@@ -277,7 +277,7 @@ main(int ac, char **av)
                 fprintf(fo, "%s\n", pas->pw_name);
                 fclose(fo);
             } else
-                fprintf(stderr, "unable to append to %s/%s\n", CDir, CRONUPDATE);
+                printlogf(0, "unable to append to %s/%s\n", CDir, CRONUPDATE);
             close(lockfd);  /* implicit LOCK_UN */
         }
     }
@@ -285,6 +285,7 @@ main(int ac, char **av)
 	return 0;
 }
 
+/* this is required to satisfy the printlogf() symbol when linking chuser.o */
 void
 printlogf(int level, const char *ctl, ...)
 {
