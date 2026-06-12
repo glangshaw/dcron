@@ -1,5 +1,31 @@
-git 5.x 31-May-2026
-  * fix to calculation of when the hourly crontab resync is due.
+v5.1 12-June-2026
+
+  * Restore missing month check when running jobs. It had been
+    removed by a 3rd party commit taken from Jim's master branch.
+
+  * Crontab resyncs will now happen on the hour instead of every 60
+    minutes from the time crond was started.
+
+  * 'cron.update' processing now uses a file lock to avoid race
+    conditions.
+
+  * defaults for CRONTABS, CRONSTAMPS and CRONMAIL directory locations
+    have been changed as follows
+       CRONTABS = /var/lib/cron/crontabs
+       CRONSTAMPS = /var/lib/cron/cronstamps
+       CRONMAIL = /var/spool/cron
+
+    These differ from their historical locations (but are arguably
+    more correct and FHS compliant).
+
+    To continue using the historical locations you will need to
+    specify them when running 'make', as follows:
+       CRONTABS = /var/spool/cron/crontabs
+       CRONSTAMPS = /var/spool/cron/cronstamps
+       CRONMAIL = /var/spool/cron/mail
+
+  * other code cleanups and minor fixes. see the git log for
+    full details.
 
 v5.0 26-May-2026
   * crond will now clear the process environment before running jobs
