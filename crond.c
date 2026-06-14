@@ -41,7 +41,8 @@ void RunMainLoop()
   long dt;
   short stime = 60;
 
-  rescan = t1 = time(NULL);
+  t1 = time(NULL);
+  rescan = t1 - t1 % RESCAN_INTERVAL;
 
   for (;;)
   {
@@ -70,7 +71,7 @@ void RunMainLoop()
 
     if (rescan + RESCAN_INTERVAL <= t2 && CheckJobs() == 0)
     {
-      rescan = t2;
+      rescan = t2 - t2 % RESCAN_INTERVAL;
       SynchronizeDir(CDir, NULL, 0);
       SynchronizeDir(SCDir, "root", 0);
     }
@@ -80,7 +81,7 @@ void RunMainLoop()
       logn(5, "Wakeup dt=%d\n", dt);
     if (dt < -60 * 60 || dt > 60 * 60)
     {
-      rescan = 0;
+      rescan = t2 - t2 % RESCAN_INTERVAL;
       t1 = t2;
       logn(9, "time disparity of %d minutes detected\n", dt / 60);
     }
