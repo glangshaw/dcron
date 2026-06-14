@@ -52,6 +52,9 @@ void RunMainLoop()
 
     t2 = time(NULL);
 
+    if (DebugOpt)
+      logn(5, "Wakeup: %s", ctime(&t2));
+
     /*
      * The file 'cron.update' is checked to determine new cron
      * jobs.  The directory is rescanned once an hour to deal
@@ -77,8 +80,6 @@ void RunMainLoop()
     }
     CheckUpdates(CDir, NULL);
     CheckUpdates(SCDir, "root");
-    if (DebugOpt)
-      logn(5, "Wakeup t2=%s\n", ctime(&t2));
     if (t2 < t1 - ONE_HOUR || t2 > t1 + ONE_HOUR)
     {
       rescan = t2 - t2 % RESCAN_INTERVAL;
