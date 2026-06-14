@@ -21,8 +21,10 @@
 #include <time.h>
 #include <unistd.h>
 
+#define ONE_HOUR 3600
+
 #ifndef RESCAN_INTERVAL
-#define RESCAN_INTERVAL 3600
+#define RESCAN_INTERVAL ONE_HOUR
 #endif
 
 short DebugOpt;
@@ -38,7 +40,6 @@ void RunMainLoop()
   time_t t1;
   time_t t2;
   time_t rescan; /* time of last rescan */
-  long dt;
   short stime = 60;
 
   t1 = time(NULL);
@@ -50,7 +51,6 @@ void RunMainLoop()
     sleep((stime + 1) - (short)(time(NULL) % stime));
 
     t2 = time(NULL);
-    dt = t2 - t1;
 
     /*
      * The file 'cron.update' is checked to determine new cron
@@ -78,14 +78,14 @@ void RunMainLoop()
     CheckUpdates(CDir, NULL);
     CheckUpdates(SCDir, "root");
     if (DebugOpt)
-      logn(5, "Wakeup dt=%d\n", dt);
-    if (dt < -60 * 60 || dt > 60 * 60)
+      logn(5, "Wakeup t2=%s\n", ctime(&t2));
+    if (t2 < t1 - ONE_HOUR || t2 > t1 + ONE_HOUR)
     {
       rescan = t2 - t2 % RESCAN_INTERVAL;
       t1 = t2;
-      logn(9, "time disparity of %d minutes detected\n", dt / 60);
+      logn(9, "large time disparity detected.\n");
     }
-    else if (dt > 0)
+    else if (t2 > t1)
     {
       TestJobs(t1, t2);
       RunJobs();
@@ -183,7 +183,6 @@ int main(int argc, char **argv)
     if (pid > 0)
       exit(0);
   }
-
 
   logn(9, "%s " VERSION " dillon, started\n", argv[0]);
 
