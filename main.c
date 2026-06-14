@@ -13,6 +13,17 @@
 
 #include "defs.h"
 
+#define ONE_HOUR 3600
+#define ONE_MINUTE 60
+
+#ifndef RESCAN_INTERVAL
+#define RESCAN_INTERVAL ONE_HOUR
+#endif
+
+#ifndef WAKEUP_INTERVAL
+#define WAKEUP_INTERVAL ONE_MINUTE
+#endif
+
 Prototype short DebugOpt;
 Prototype short LogLevel;
 Prototype short ForegroundOpt;
@@ -50,69 +61,65 @@ int SCDirFD;
 uid_t DaemonUid;
 pid_t DaemonPid;
 
-void RunMainLoop( void )
+void RunMainLoop()
 {
     time_t t1;
     time_t t2;
-    time_t rescan;  /* time of last rescan */
-    long dt;
-    short stime = INACTIVE_SLEEP_PERIOD;
+    time_t rescan; /* time of last rescan */
+    unsigned int sleep_remaining;
 
     t1 = time(NULL);
-    rescan = t1 - t1 % RESCAN_INTERVAL; 
+    t1 = t1 - t1 % WAKEUP_INTERVAL;
+    rescan = t1 - t1 % RESCAN_INTERVAL;
 
-    for (;;) {
+    for (;;)
+    {
         /* synchronize to 1 second after the minute, minimum sleep of 1 second. */
-        sleep((stime + 1) - (short)(time(NULL) % stime));
-
+        sleep_remaining = sleep(WAKEUP_INTERVAL + 1 - time(NULL) % WAKEUP_INTERVAL );
         t2 = time(NULL);
-        dt = t2 - t1;
 
-        /*
-         * The file 'cron.update' is checked to determine new cron
-         * jobs.  The directory is rescanned once an hour to deal
-         * with any screwups.
-         *
-         * check for disparity.  Disparities over an hour either way
+        if ( DebugOpt )
+            printlogf(LOG_DEBUG, "%sWakeup: %s",
+                      ((sleep_remaining > 0)? "Early ": ""), ctime(&t2));
+
+        /* check for disparity.  Disparities over an hour either way
          * result in resynchronization.  A reverse-indexed disparity
          * less then an hour causes us to effectively sleep until we
          * match the original time (i.e. no re-execution of jobs that
          * have just been run).  A forward-indexed disparity less then
          * an hour causes intermediate jobs to be run, but only once
-         * in the worst case.
-         *
-         * when running jobs, the inequality used is greater but not
-         * equal to t1, and less then or equal to t2.
-         */
+         * in the worst case. */
 
-        if ( rescan + RESCAN_INTERVAL <= t2 && CheckJobs() == 0 ) {
-           /*
-            * If we resynchronize while jobs are running we'll clobber
-            * the job pids, testing CheckJobs() will avoid that, deffering
-            * the rescan until there are no running jobs.
-            */
+        if (t2 < t1 - ONE_HOUR || t2 > t1 + ONE_HOUR)
+        {
             rescan = t2 - t2 % RESCAN_INTERVAL;
-            SynchronizeDir(CDir, NULL, 0);
-            SynchronizeDir(SCDir, "root", 0);
-            ReadTimestamps(NULL);
-        } else {
-            CheckUpdates(CDir, CDirFD, NULL, t1, t2);
-            CheckUpdates(SCDir, SCDirFD, "root", t1, t2);
+            t1 = t2 - t2 % WAKEUP_INTERVAL;
+            printlogf(LOG_NOTICE, "time disparity greater than one hour detected.\n");
         }
-        if (DebugOpt)
-            printlogf(LOG_DEBUG, "Wakeup dt=%d\n", dt);
-        if (dt < -ONE_HOUR_SECONDS || dt > ONE_HOUR_SECONDS) {
-            t1 = t2;
-            rescan = 0; /* force a rescan */
-            printlogf(LOG_NOTICE,"time disparity of %d minutes detected\n", dt / 60);
-        } else if (dt > 0) {
+
+        /* The file 'cron.update' is checked to determine new cron
+           jobs.  The directory is rescanned once an hour to deal with
+           any screwups. */
+
+        if (t2 >= t1)
+        {
+            if (rescan + RESCAN_INTERVAL <= t2)
+            {
+                rescan = t2 - t2 % RESCAN_INTERVAL;
+                SynchronizeDir(CDir, NULL, 0);
+                SynchronizeDir(SCDir, "root", 0);
+                ReadTimestamps(NULL);
+            }
+            else
+            {
+                CheckUpdates(CDir, CDirFD, NULL, t1, t2);
+                CheckUpdates(SCDir, SCDirFD, "root", t1, t2);
+            }
+            /* when running jobs, the inequality used is greater but
+               not equal to t1, and less then or equal to t2. */
+            CheckJobs();
             TestJobs(t1, t2);
             RunJobs();
-            sleep(SETTLE_SLEEP_PERIOD);
-            if (CheckJobs() > 0)
-                stime = ACTIVE_SLEEP_PERIOD;
-            else
-                stime = INACTIVE_SLEEP_PERIOD;
             t1 = t2;
         }
     }

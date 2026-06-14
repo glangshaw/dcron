@@ -1,6 +1,10 @@
-git 5.x 12-June-2026
-  * prevent rescans drifting off the hour if a rescan is delayed
-    by running jobs.
+git 5.x 19-June-2026
+
+  * simplify and cleanup RunMainLoop:
+    * CheckUpdates() no longer called when a resync is necessary.
+    * Remove unnecessary short and long sleeps (stime). sleep
+      period is now a constant (WAKEUP_INTERVAL) subject to
+      early wakeup owing to SIGNALS.
 
 v5.1 12-June-2026
 

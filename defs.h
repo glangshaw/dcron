@@ -101,22 +101,6 @@
 #define FREQ_TAG		"FREQ="
 #endif
 
-#ifndef RESCAN_INTERVAL
-#define RESCAN_INTERVAL ONE_HOUR_SECONDS
-#endif
-#ifndef ACTIVE_SLEEP_PERIOD
-#define ACTIVE_SLEEP_PERIOD 10
-#endif
-#if ACTIVE_SLEEP_PERIOD < 2
-#error "ACTIVE_SLEEP_PERIOD must be greater than 2"
-#endif
-#ifndef SETTLE_SLEEP_PERIOD
-#define SETTLE_SLEEP_PERIOD ( ACTIVE_SLEEP_PERIOD / 2 )
-#endif
-#ifndef INACTIVE_SLEEP_PERIOD
-#define INACTIVE_SLEEP_PERIOD 60
-#endif
-
 #define HOURLY_FREQ		60 * 60
 #define DAILY_FREQ		24 * HOURLY_FREQ
 #define	WEEKLY_FREQ		7 * DAILY_FREQ
