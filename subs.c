@@ -65,13 +65,18 @@ static void vlog(int level, int fd, const char *ctl, va_list va)
 
 int slog(char *buf, const char *ctl, int nmax, va_list va, short useDate)
 {
-  time_t t = time(NULL);
-  struct tm *tp = localtime(&t);
+    time_t t;
+    struct tm *tp;
+    size_t dateStrLen = 0;
 
   buf[0] = 0;
   if (useDate)
-    strftime(buf, 128, "%d-%b-%Y %H:%M  ", tp);
-  vsnprintf(buf + strlen(buf), nmax, ctl, va);
+  {
+    t = time(NULL);
+    tp = localtime(&t);
+    dateStrLen = strftime(buf, 128, "%d-%b-%Y %H:%M  ", tp);
+  }
+    vsnprintf(buf + dateStrLen, nmax, ctl, va);
   return (strlen(buf));
 }
 
