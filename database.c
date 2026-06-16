@@ -214,7 +214,7 @@ void SynchronizeFile(const char *dpath, const char *fileName,
         if (--maxEntries == 0)
           break;
 
-        bzero(&line, sizeof(line));
+        memset(&line, 0, sizeof(line));
 
         if (DebugOpt)
           logn(9, "User %s Entry %s\n", userName, buf);
