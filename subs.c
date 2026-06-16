@@ -131,17 +131,3 @@ int ChangeUser(const char *user, short dochdir)
   }
   return (pas->pw_uid);
 }
-
-#if 0
-
-char *
-strdup(const char *str)
-{
-    char *ptr = malloc(strlen(str) + 1);
-
-    if (ptr)
-        strcpy(ptr, str);
-    return(ptr);
-}
-
-#endif
