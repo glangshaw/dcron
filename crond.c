@@ -22,9 +22,18 @@
 #include <unistd.h>
 
 #define ONE_HOUR 3600
+#define ONE_MINUTE 60
 
 #ifndef RESCAN_INTERVAL
 #define RESCAN_INTERVAL ONE_HOUR
+#endif
+
+#ifndef WAKEUP_INTERVAL
+#define WAKEUP_INTERVAL ONE_MINUTE
+#endif
+
+#ifndef CHECKJOBS_INTERVAL
+#define CHECKJOBS_INTERVAL 10
 #endif
 
 short DebugOpt;
@@ -40,9 +49,10 @@ void RunMainLoop()
   time_t t1;
   time_t t2;
   time_t rescan; /* time of last rescan */
-  short stime = 60;
+  short stime = WAKEUP_INTERVAL;
 
   t1 = time(NULL);
+  t1 = t1 - t1 % WAKEUP_INTERVAL;
   rescan = t1 - t1 % RESCAN_INTERVAL;
 
   for (;;)
@@ -72,31 +82,38 @@ void RunMainLoop()
      * equal to t1, and less then or equal to t2.
      */
 
-    if (rescan + RESCAN_INTERVAL <= t2)
-    {
-      rescan = t2 - t2 % RESCAN_INTERVAL;
-      SynchronizeDir(CDir, NULL, 0);
-      SynchronizeDir(SCDir, "root", 0);
-    }
-    CheckUpdates(CDir, NULL);
-    CheckUpdates(SCDir, "root");
     if (t2 < t1 - ONE_HOUR || t2 > t1 + ONE_HOUR)
     {
       rescan = t2 - t2 % RESCAN_INTERVAL;
-      t1 = t2;
+      t1 = t2 - t2 % WAKEUP_INTERVAL;
       logn(9, "large time disparity detected.\n");
     }
-    else if (t2 > t1)
+
+    if (t2 >= t1 + WAKEUP_INTERVAL)
     {
+      if (rescan + RESCAN_INTERVAL <= t2)
+      {
+        rescan = t2 - t2 % RESCAN_INTERVAL;
+        SynchronizeDir(CDir, NULL, 0);
+        SynchronizeDir(SCDir, "root", 0);
+      }
+      else
+      {
+        CheckUpdates(CDir, NULL);
+        CheckUpdates(SCDir, "root");
+      }
       TestJobs(t1, t2);
       RunJobs();
-      sleep(5);
-      if (CheckJobs() > 0)
-        stime = 10;
-      else
-        stime = 60;
       t1 = t2;
+      /* this small sleep gives short-lived jobs a chance to complete prior to
+         running CheckJobs() */
+      sleep(5);
     }
+
+    if (CheckJobs() > 0)
+      stime = CHECKJOBS_INTERVAL;
+    else
+      stime = WAKEUP_INTERVAL;
   }
 }
 
