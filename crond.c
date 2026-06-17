@@ -72,7 +72,7 @@ void RunMainLoop()
      * equal to t1, and less then or equal to t2.
      */
 
-    if (rescan + RESCAN_INTERVAL <= t2 && CheckJobs() == 0)
+    if (rescan + RESCAN_INTERVAL <= t2)
     {
       rescan = t2 - t2 % RESCAN_INTERVAL;
       SynchronizeDir(CDir, NULL, 0);
