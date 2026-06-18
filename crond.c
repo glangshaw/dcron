@@ -1,11 +1,10 @@
 /*
  * crond.c
  *
- * dcron -d[#] -c <crondir> [ -f | -b ]
- *
  * run as root, but NOT setuid root
  *
  * Copyright 1994 Matthew Dillon (dillon@apollo.backplane.com)
+ * Copyright 2026 Gary Langshaw (gary.langshaw@gmail.com)
  * May be distributed under the GNU General Public License
  */
 
@@ -36,9 +35,8 @@
 #define CHECKJOBS_INTERVAL 10
 #endif
 
-short DebugOpt;
-short LogLevel = 8;
-short ForegroundOpt;
+short LogLevel = 5;
+short BackgroundOpt = 0;
 const char *CDir = CRONTABS;
 const char *SCDir = SCRONTABS;
 uid_t DaemonUid;
@@ -62,8 +60,7 @@ void RunMainLoop()
 
     t2 = time(NULL);
 
-    if (DebugOpt)
-      logn(5, "Wakeup: %s", ctime(&t2));
+    logn(7, "Wakeup: %s", ctime(&t2));
 
     /*
      * The file 'cron.update' is checked to determine new cron
@@ -86,7 +83,7 @@ void RunMainLoop()
     {
       rescan = t2 - t2 % RESCAN_INTERVAL;
       t1 = t2 - t2 % WAKEUP_INTERVAL;
-      logn(9, "large time disparity detected.\n");
+      logn(5, "time disparity greater than one hour detected.\n");
     }
 
     if (t2 >= t1 + WAKEUP_INTERVAL)
@@ -129,19 +126,12 @@ int main(int argc, char **argv)
 
   DaemonUid = getuid();
 
-  while ((opt = getopt(argc, argv, "bc:dfl:s:")) != -1)
+  while ((opt = getopt(argc, argv, "bc:l:s:")) != -1)
   {
     switch (opt)
     {
     case 'b':
-      ForegroundOpt = 0;
-      break;
-    case 'd':
-      DebugOpt = 1;
-      LogLevel = 0;
-      /* intentional fall-through */
-    case 'f':
-      ForegroundOpt = 1;
+      BackgroundOpt = 1;
       break;
     case 'c':
       CDir = optarg;
@@ -180,7 +170,7 @@ int main(int argc, char **argv)
     close(i);
   }
 
-  if (ForegroundOpt == 0)
+  if (BackgroundOpt == 1)
   {
     int fd;
     int pid;
@@ -202,7 +192,7 @@ int main(int argc, char **argv)
       exit(0);
   }
 
-  logn(9, "%s " VERSION " dillon, started\n", argv[0]);
+  logn(5, "%s " VERSION " dillon, started\n", argv[0]);
 
   SynchronizeDir(CDir, NULL, 1);
   SynchronizeDir(SCDir, "root", 1);

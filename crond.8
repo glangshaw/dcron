@@ -1,28 +1,20 @@
 .\" Copyright 1994 Matthew Dillon (dillon@apollo.backplane.com)
 .\" May be distributed under the GNU General Public License
-.TH CROND 8 "1 May 1994"
+.TH CROND 8 "18 June 2026"
 .SH NAME
 crond \- cron daemon (Dillon's Cron)
 .SH SYNOPSIS
-.B crond [-l#] [-d] [-f] [-b] [-c directory]
+.B crond [-l#] [-b] [-c directory]
 .SH OPTIONS
 .B crond
 is a background daemon that parses individual crontab files and
 executes commands on behalf of the users in question.
 .TP 0.5i
 .B "-l<loglevel> "
-set logging level, default is 8.
-.TP 0.5i
-.B "-d"
-enable debugging level.
-This option also sets the logging level to 0 and causes crond to run
-in the foreground.
-.TP 0.5i
-.B "-f "
-run crond in the foreground.
+set logging level, default is 5 (LOG_NOTICE).
 .TP 0.5i
 .B "-b "
-run crond in the background (default unless -d specified).
+run crond in the background.
 .TP 0.5i
 .B "-c directory "
 specify directory containing crontab files.

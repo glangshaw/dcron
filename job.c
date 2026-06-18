@@ -3,6 +3,7 @@
  * JOB.C
  *
  * Copyright 1994 Matthew Dillon (dillon@apollo.backplane.com)
+ * Copyright 2026 Gary Langshaw (gary.langshaw@gmail.com)
  * May be distributed under the GNU General Public License
  */
 
@@ -57,12 +58,11 @@ void RunJob(CronFile *file, CronLine *line)
 
     if (ChangeUser(file->cf_UserName, 1) < 0)
     {
-      logn(9, "ChangeUser failed (%s): %s\n", file->cf_UserName, line->cl_Shell);
+      logn(3, "ChangeUser failed (%s): %s\n", file->cf_UserName, line->cl_Shell);
       exit(0);
     }
 
-    if (DebugOpt)
-      logn(5, "Child Running %s\n", line->cl_Shell);
+    logn(6, "running crontab entry for user %s: %s\n", file->cf_UserName, line->cl_Shell);
 
     /*
      * Setup close-on-exec descriptor in case exec fails
@@ -105,7 +105,7 @@ void RunJob(CronFile *file, CronLine *line)
     /*
      * PARENT, FORK FAILED
      */
-    logn(9, "couldn't fork, user %s\n", file->cf_UserName);
+    logn(3, "couldn't fork, user %s\n", file->cf_UserName);
     line->cl_Pid = 0;
     remove(mailFile);
   }
@@ -198,7 +198,7 @@ void EndJob(CronFile *file, CronLine *line)
 
     if (ChangeUser(file->cf_UserName, 1) < 0)
     {
-      logn(9, "ChangeUser failed (%s), unable to send mail\n", file->cf_UserName);
+      logn(3, "ChangeUser failed (%s), unable to send mail\n", file->cf_UserName);
       exit(0);
     }
 
@@ -233,7 +233,7 @@ void EndJob(CronFile *file, CronLine *line)
     /*
      * PARENT, FORK FAILED
      */
-    logn(9, "unable to fork, user %s", file->cf_UserName);
+    logn(3, "unable to fork, user %s", file->cf_UserName);
     line->cl_Pid = 0;
   }
   else

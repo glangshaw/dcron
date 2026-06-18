@@ -3,6 +3,7 @@
  * SUBS.C
  *
  * Copyright 1994 Matthew Dillon (dillon@apollo.backplane.com)
+ * Copyright 2026 Gary Langshaw (gary.langshaw@gmail.com)
  * May be distributed under the GNU General Public License
  */
 
@@ -56,7 +57,7 @@ static void vlog(int level, int fd, const char *ctl, va_list va)
   short n;
   static short useDate = 1;
 
-  if (level >= LogLevel)
+  if (level <= LogLevel)
   {
     write(fd, buf, n = slog(buf, ctl, sizeof(buf), va, useDate));
     useDate = (n && buf[n - 1] == '\n');
@@ -90,7 +91,7 @@ int ChangeUser(const char *user, short dochdir)
 
   if ((pas = getpwnam(user)) == 0)
   {
-    logn(9, "failed to get uid for %s", user);
+    logn(3, "failed to get uid for %s", user);
     return (-1);
   }
   setenv("USER", pas->pw_name, 1);
@@ -103,28 +104,28 @@ int ChangeUser(const char *user, short dochdir)
 
   if (initgroups(user, pas->pw_gid) < 0)
   {
-    logn(9, "initgroups failed: %s %s", user, strerror(errno));
+    logn(3, "initgroups failed: %s %s", user, strerror(errno));
     return (-1);
   }
   if (setregid(pas->pw_gid, pas->pw_gid) < 0)
   {
-    logn(9, "setregid failed: %s %d", user, pas->pw_gid);
+    logn(3, "setregid failed: %s %d", user, pas->pw_gid);
     return (-1);
   }
   if (setreuid(pas->pw_uid, pas->pw_uid) < 0)
   {
-    logn(9, "setreuid failed: %s %d", user, pas->pw_uid);
+    logn(3, "setreuid failed: %s %d", user, pas->pw_uid);
     return (-1);
   }
   if (dochdir)
   {
     if (chdir(pas->pw_dir) < 0)
     {
-      logn(8, "chdir failed: %s %s", user, pas->pw_dir);
+      logn(3, "chdir failed: %s %s", user, pas->pw_dir);
       if (chdir(TMPDIR) < 0)
       {
-        logn(9, "chdir failed: %s %s", user, pas->pw_dir);
-        logn(9, "chdir failed: %s " TMPDIR, user);
+        logn(3, "chdir failed: %s %s", user, pas->pw_dir);
+        logn(3, "chdir failed: %s " TMPDIR, user);
         return (-1);
       }
     }
