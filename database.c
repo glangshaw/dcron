@@ -404,9 +404,9 @@ char *ParseField(char *user, char *ary, int modvalue, int off,
 
 void FixDayDow(CronLine *line)
 {
-  unsigned short i;
-  short weekUsed = 0;
-  short daysUsed = 0;
+  unsigned int i;
+  int weekUsed = 0;
+  int daysUsed = 0;
 
   for (i = 0; i < ARYSIZE(line->cl_Dow); ++i)
   {
@@ -484,7 +484,7 @@ void DeleteFile(CronFile **pfile)
 
 int TestJobs(time_t t1, time_t t2)
 {
-  short nJobs = 0;
+  int nJobs = 0;
   time_t t;
 
   /*

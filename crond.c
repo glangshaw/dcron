@@ -19,6 +19,7 @@
 #include <sys/ioctl.h>
 #include <time.h>
 #include <unistd.h>
+#include <signal.h>
 
 #define ONE_HOUR 3600
 #define ONE_MINUTE 60
@@ -35,19 +36,26 @@
 #define CHECKJOBS_INTERVAL 10
 #endif
 
-short LogLevel = 5;
-short BackgroundOpt = 0;
+int LogLevel = 5;
+int BackgroundOpt = 0;
 const char *CDir = CRONTABS;
 const char *SCDir = SCRONTABS;
 uid_t DaemonUid;
 int InSyncFileRoot;
+
+volatile int sig_chld = 0;
+
+void SigHandler(int sig)
+{
+    sig_chld = 1;
+}
 
 void RunMainLoop()
 {
   time_t t1;
   time_t t2;
   time_t rescan; /* time of last rescan */
-  short stime = WAKEUP_INTERVAL;
+  int stime = WAKEUP_INTERVAL;
 
   t1 = time(NULL);
   t1 = t1 - t1 % WAKEUP_INTERVAL;
@@ -56,7 +64,7 @@ void RunMainLoop()
   for (;;)
   {
     /* synchronize to 1 second after the minute, minimum sleep of 1 second. */
-    sleep((stime + 1) - (short)(time(NULL) % stime));
+    sleep(stime + 1 - time(NULL) % stime);
 
     t2 = time(NULL);
 
@@ -119,6 +127,7 @@ int main(int argc, char **argv)
   extern char *optarg;
   int i;
   int opt;
+  struct sigaction sa;
 
   /*
    * parse options
@@ -192,7 +201,16 @@ int main(int argc, char **argv)
       exit(0);
   }
 
+
   logn(5, "%s " VERSION " dillon, started\n", argv[0]);
+
+  /* establish a signal handler for SIGCHLD */
+
+  sa.sa_handler = SigHandler;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_flags = SA_RESTART|SA_NOCLDSTOP;
+  if (sigaction(SIGCHLD, &sa, NULL) == -1)
+    logn(3, "failed to establish sig_handler");
 
   SynchronizeDir(CDir, NULL, 1);
   SynchronizeDir(SCDir, "root", 1);

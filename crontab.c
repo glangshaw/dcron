@@ -26,7 +26,7 @@
 
 const char *CDir = CRONTABS;
 int UserId;
-short LogLevel = 9;
+int LogLevel = 9;
 
 void EditFile(const char *user, const char *file);
 int GetReplaceStream(const char *user, const char *file);

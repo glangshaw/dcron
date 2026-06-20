@@ -75,8 +75,8 @@ typedef struct CronLine
 #define RUN_RUNNING 2
 #define RUN_FAILED 3
 
-extern short LogLevel;
-extern short DebugOpt;
+extern int LogLevel;
+extern int DebugOpt;
 
 #include <sys/types.h>
 extern uid_t DaemonUid;

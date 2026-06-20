@@ -14,6 +14,6 @@
 void logn(int level, const char *ctl, ...);
 void logfd(int fd, const char *ctl, ...);
 void fdprintf(int fd, const char *ctl, ...);
-int ChangeUser(const char *user, short dochdir);
+int ChangeUser(const char *user, int dochdir);
 
 #endif

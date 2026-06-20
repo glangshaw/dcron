@@ -19,7 +19,7 @@
 #include <unistd.h>
 
 static void vlog(int level, int fd, const char *ctl, va_list va);
-static int slog(char *buf, const char *ctl, int nmax, va_list va, short useDate);
+static int slog(char *buf, const char *ctl, int nmax, va_list va, int useDate);
 
 
 void logn(int level, const char *ctl, ...)
@@ -54,8 +54,8 @@ void fdprintf(int fd, const char *ctl, ...)
 static void vlog(int level, int fd, const char *ctl, va_list va)
 {
   char buf[2048];
-  short n;
-  static short useDate = 1;
+  int n;
+  static int useDate = 1;
 
   if (level <= LogLevel)
   {
@@ -64,7 +64,7 @@ static void vlog(int level, int fd, const char *ctl, va_list va)
   }
 }
 
-int slog(char *buf, const char *ctl, int nmax, va_list va, short useDate)
+int slog(char *buf, const char *ctl, int nmax, va_list va, int useDate)
 {
     time_t t;
     struct tm *tp;
@@ -81,7 +81,7 @@ int slog(char *buf, const char *ctl, int nmax, va_list va, short useDate)
   return (strlen(buf));
 }
 
-int ChangeUser(const char *user, short dochdir)
+int ChangeUser(const char *user, int dochdir)
 {
   struct passwd *pas;
 
