@@ -40,7 +40,7 @@
 #define MAXLINES 256 /* max lines in non-root crontabs */
 #endif
 #ifndef PATH_VI
-#define PATH_VI "/usr/bin/vi" /* location of vi	*/
+#define PATH_VI "/usr/bin/vi" /* location of vi */
 #endif
 
 #define VERSION "V3.2"
@@ -52,23 +52,23 @@ typedef struct CronFile
   char *cf_DPath;    /* Directory path to cronfile */
   char *cf_FileName; /* Name of cronfile */
   char *cf_UserName; /* username to execute jobs as */
-  int cf_Ready;      /* bool: one or more jobs ready	*/
+  int cf_Ready;      /* bool: one or more jobs ready */
   int cf_Running;    /* bool: one or more jobs running */
-  int cf_Deleted;    /* marked for deletion, ignore	*/
+  int cf_Deleted;    /* marked for deletion, ignore */
 } CronFile;
 
 typedef struct CronLine
 {
   struct CronLine *cl_Next;
-  char *cl_Shell;   /* shell command			*/
-  int cl_Pid;       /* running pid, 0, or armed (-1)	*/
-  int cl_MailFlag;  /* running pid is for mail		*/
-  int cl_MailPos;   /* 'empty file' size			*/
-  char cl_Mins[60]; /* 0-59 				*/
-  char cl_Hrs[24];  /* 0-23					*/
-  char cl_Days[32]; /* 1-31					*/
-  char cl_Mons[12]; /* 0-11 				*/
-  char cl_Dow[7];   /* 0-6, beginning sunday		*/
+  char *cl_Shell;   /* shell command */
+  int cl_Pid;       /* running pid, 0, or armed (-1) */
+  int cl_MailFlag;  /* running pid is for mail */
+  int cl_MailPos;   /* 'empty file' size */
+  char cl_Mins[60]; /* 0-59 */
+  char cl_Hrs[24];  /* 0-23 */
+  char cl_Days[32]; /* 1-31 */
+  char cl_Mons[12]; /* 0-11 */
+  char cl_Dow[7];   /* 0-6, beginning sunday */
 } CronLine;
 
 #define RUN_RANOUT 1
@@ -82,4 +82,3 @@ extern int DebugOpt;
 extern uid_t DaemonUid;
 
 #endif  /* DEFS_H */
-         
