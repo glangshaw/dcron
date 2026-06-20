@@ -54,7 +54,7 @@ all: $(PROTOS) crond crontab ;
 	echo "CRONMAIL = $(CRONMAIL)" >> config
 
 protos.h: $(SRCS) $(TABSRCS)
-	grep -F -h Prototype $(SRCS) $(TABSRCS) > protos.h
+	sed -n '/^Prototype .*;/{p; d;}; /^Prototype .*[^;]/,/.*;/p' $(SRCS) $(TABSRCS) > protos.h
 
 crond: $(OBJS)
 	$(CC) $(LDFLAGS) $^ $(LIBS) -o crond
