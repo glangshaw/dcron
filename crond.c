@@ -14,12 +14,12 @@
 #include "subs.h"
 
 #include <fcntl.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/ioctl.h>
 #include <time.h>
 #include <unistd.h>
-#include <signal.h>
 
 #define ONE_HOUR 3600
 #define ONE_MINUTE 60
@@ -45,9 +45,9 @@ int InSyncFileRoot;
 
 volatile int sig_chld = 0;
 
-void SigHandler(int sig)
+void SigHandler(int )
 {
-    sig_chld = 1;
+  sig_chld = 1;
 }
 
 void RunMainLoop()
@@ -55,7 +55,7 @@ void RunMainLoop()
   time_t t1;
   time_t t2;
   time_t rescan; /* time of last rescan */
-  int stime = WAKEUP_INTERVAL;
+  unsigned int stime;
 
   t1 = time(NULL);
   t1 = t1 - t1 % WAKEUP_INTERVAL;
@@ -64,28 +64,19 @@ void RunMainLoop()
   for (;;)
   {
     /* synchronize to 1 second after the minute, minimum sleep of 1 second. */
-    sleep(stime + 1 - time(NULL) % stime);
-
+    stime = sleep(WAKEUP_INTERVAL + 1 - time(NULL) % WAKEUP_INTERVAL);
     t2 = time(NULL);
 
-    logn(7, "Wakeup: %s", ctime(&t2));
+    logn(7, "Wakeup(%s): %s", ((stime > 0) ? "interrupted" : "scheduled"),
+         ctime(&t2));
 
-    /*
-     * The file 'cron.update' is checked to determine new cron
-     * jobs.  The directory is rescanned once an hour to deal
-     * with any screwups.
-     *
-     * check for disparity.  Disparities over an hour either way
+    /* check for disparity.  Disparities over an hour either way
      * result in resynchronization.  A reverse-indexed disparity
      * less then an hour causes us to effectively sleep until we
      * match the original time (i.e. no re-execution of jobs that
      * have just been run).  A forward-indexed disparity less then
      * an hour causes intermediate jobs to be run, but only once
-     * in the worst case.
-     *
-     * when running jobs, the inequality used is greater but not
-     * equal to t1, and less then or equal to t2.
-     */
+     * in the worst case. */
 
     if (t2 < t1 - ONE_HOUR || t2 > t1 + ONE_HOUR)
     {
@@ -94,31 +85,30 @@ void RunMainLoop()
       logn(5, "time disparity greater than one hour detected.\n");
     }
 
-    if (t2 >= t1 + WAKEUP_INTERVAL)
+    if (stime == 0 && t2 >= t1)
     {
       if (rescan + RESCAN_INTERVAL <= t2)
       {
+        /* The directory is rescanned once an hour to deal with any
+           screwups. */
         rescan = t2 - t2 % RESCAN_INTERVAL;
         SynchronizeDir(CDir, NULL, 0);
         SynchronizeDir(SCDir, "root", 0);
       }
       else
       {
+        /* The file 'cron.update' is checked to determine new cron
+           jobs. */
         CheckUpdates(CDir, NULL);
         CheckUpdates(SCDir, "root");
       }
+      /* when running jobs, the inequality used is greater but
+         not equal to t1, and less then or equal to t2. */
       TestJobs(t1, t2);
       RunJobs();
       t1 = t2;
-      /* this small sleep gives short-lived jobs a chance to complete prior to
-         running CheckJobs() */
-      sleep(5);
     }
-
-    if (CheckJobs() > 0)
-      stime = CHECKJOBS_INTERVAL;
-    else
-      stime = WAKEUP_INTERVAL;
+    CheckJobs();
   }
 }
 
@@ -201,14 +191,13 @@ int main(int argc, char **argv)
       exit(0);
   }
 
-
   logn(5, "%s " VERSION " dillon, started\n", argv[0]);
 
   /* establish a signal handler for SIGCHLD */
 
   sa.sa_handler = SigHandler;
   sigemptyset(&sa.sa_mask);
-  sa.sa_flags = SA_RESTART|SA_NOCLDSTOP;
+  sa.sa_flags = SA_RESTART | SA_NOCLDSTOP;
   if (sigaction(SIGCHLD, &sa, NULL) == -1)
     logn(3, "failed to establish sig_handler");
 
