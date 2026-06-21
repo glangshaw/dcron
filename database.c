@@ -26,9 +26,8 @@
 
 void SynchronizeFile(const char *dpath, const char *fname, const char *uname);
 void DeleteFile(CronFile **pfile);
-char *ParseField(char *userName, char *ary, int modvalue, int off,
+char *ParseField(char *user, char *ary, int modvalue, int off, int star,
                  const char **names, char *ptr);
-void FixDayDow(CronLine *line);
 
 CronFile *FileBase;
 
@@ -223,11 +222,11 @@ void SynchronizeFile(const char *dpath, const char *fileName,
          * parse date ranges
          */
 
-        ptr = ParseField(file->cf_UserName, line.cl_Mins, 60, 0, NULL, ptr);
-        ptr = ParseField(file->cf_UserName, line.cl_Hrs, 24, 0, NULL, ptr);
-        ptr = ParseField(file->cf_UserName, line.cl_Days, 32, 0, NULL, ptr);
-        ptr = ParseField(file->cf_UserName, line.cl_Mons, 12, -1, MonAry, ptr);
-        ptr = ParseField(file->cf_UserName, line.cl_Dow, 7, 0, DowAry, ptr);
+        ptr = ParseField(file->cf_UserName, line.cl_Mins, 60, 0, 1, NULL, ptr);
+        ptr = ParseField(file->cf_UserName, line.cl_Hrs, 24, 0, 1, NULL, ptr);
+        ptr = ParseField(file->cf_UserName, line.cl_Days, 32, 0, 1, NULL, ptr);
+        ptr = ParseField(file->cf_UserName, line.cl_Mons, 12, -1, 1, MonAry, ptr);
+        ptr = ParseField(file->cf_UserName, line.cl_Dow, 7, 0, 0, DowAry, ptr);
 
         /*
          * check failure
@@ -235,13 +234,6 @@ void SynchronizeFile(const char *dpath, const char *fileName,
 
         if (ptr == NULL)
           continue;
-
-        /*
-         * fix days and dow - if one is not * and the other
-         * is *, the other is set to 0, and vise-versa
-         */
-
-        FixDayDow(&line);
 
         *pline = calloc(1, sizeof(CronLine));
         **pline = line;
@@ -269,7 +261,7 @@ void SynchronizeFile(const char *dpath, const char *fileName,
   free(path);
 }
 
-char *ParseField(char *user, char *ary, int modvalue, int off,
+char *ParseField(char *user, char *ary, int modvalue, int off, int star,
                  const char **names, char *ptr)
 {
   char *base = ptr;
@@ -355,6 +347,7 @@ char *ParseField(char *user, char *ary, int modvalue, int off,
      * an endless loop
      */
 
+    if ( n1 != 0 || n2 != modvalue - 1 || skip != 1 || star == 1 )
     {
       int s0 = 1;
       int failsafe = 1024;
@@ -402,38 +395,6 @@ char *ParseField(char *user, char *ary, int modvalue, int off,
   return (ptr);
 }
 
-void FixDayDow(CronLine *line)
-{
-  unsigned int i;
-  int weekUsed = 0;
-  int daysUsed = 0;
-
-  for (i = 0; i < ARYSIZE(line->cl_Dow); ++i)
-  {
-    if (line->cl_Dow[i] == 0)
-    {
-      weekUsed = 1;
-      break;
-    }
-  }
-  for (i = 0; i < ARYSIZE(line->cl_Days); ++i)
-  {
-    if (line->cl_Days[i] == 0)
-    {
-      daysUsed = 1;
-      break;
-    }
-  }
-  if (weekUsed && !daysUsed)
-  {
-    memset(line->cl_Days, 0, sizeof(line->cl_Days));
-  }
-  if (daysUsed && !weekUsed)
-  {
-    memset(line->cl_Dow, 0, sizeof(line->cl_Dow));
-  }
-}
-
 /*
  *  DeleteFile() - destroy a CronFile.
  *
@@ -441,6 +402,7 @@ void FixDayDow(CronLine *line)
  *  if there are still active processes running on it.  *pfile is relinked
  *  on success.
  */
+
 void DeleteFile(CronFile **pfile)
 {
   CronFile *file = *pfile;
