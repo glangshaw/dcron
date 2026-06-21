@@ -386,11 +386,13 @@ char *ParseField(char *user, char *ary, int modvalue, int off, int star,
   while (*ptr == ' ' || *ptr == '\t' || *ptr == '\n')
     ++ptr;
 
-  int i;
+  {
+    int i;
 
-  for (i = 0; i < modvalue; ++i)
+    for (i = 0; i < modvalue; ++i)
       logn(7, "%d", ary[i]);
-  logn(7, "\n");
+    logn(7, "\n");
+  }
 
   return (ptr);
 }

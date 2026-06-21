@@ -45,9 +45,14 @@ int InSyncFileRoot;
 
 volatile int sig_chld = 0;
 
-void SigHandler(int )
+void SigHandler(int sig)
 {
-  sig_chld = 1;
+  switch( sig )
+  {
+  case SIGCHLD:
+    sig_chld = 1;
+    break;
+  }
 }
 
 void RunMainLoop()
