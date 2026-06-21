@@ -176,14 +176,7 @@ int main(int argc, char **argv)
 
   if (BackgroundOpt == 1)
   {
-    int fd;
     int pid;
-
-    if ((fd = open("/dev/tty", O_RDWR)) >= 0)
-    {
-      ioctl(fd, TIOCNOTTY, 0);
-      close(fd);
-    }
 
     pid = fork();
 
@@ -194,6 +187,8 @@ int main(int argc, char **argv)
     }
     if (pid > 0)
       exit(0);
+
+    setsid();
   }
 
   logn(5, "%s " VERSION " dillon, started\n", argv[0]);
