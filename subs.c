@@ -36,7 +36,7 @@ void logfd(int fd, const char *ctl, ...)
   va_list va;
 
   va_start(va, ctl);
-  vlog(9, fd, ctl, va);
+  vlog(0, fd, ctl, va);
   va_end(va);
 }
 
