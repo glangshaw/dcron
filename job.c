@@ -52,6 +52,9 @@ void RunJob(CronFile *file, CronLine *line)
      * CHILD, FORK OK
      */
 
+    /* Create a new process group - parent will also do this */
+    setpgid(0, 0);
+
     /*
      * Change running state to the user in question
      */
@@ -113,11 +116,15 @@ void RunJob(CronFile *file, CronLine *line)
   {
     /*
      * PARENT, FORK SUCCESS
-     *
-     * rename mail-file based on pid of process
      */
     char mailFile2[128];
 
+    /* Put child in its own process group */
+      setpgid(line->cl_Pid, 0);
+
+    /*
+     * rename mail-file based on pid of process
+     */
     snprintf(mailFile2, sizeof(mailFile2), CRONMAIL "/cron.%s.%d",
              file->cf_UserName, line->cl_Pid);
     rename(mailFile, mailFile2);
