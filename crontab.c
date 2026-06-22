@@ -38,6 +38,7 @@ main(int ac, char **av)
 {
 	enum { NONE, EDIT, LIST, REPLACE, DELETE } option = NONE;
 	struct passwd *pas;
+    char edFile[] = TMPDIR "/crontab.XXXXXX";
 	char *repFile = NULL;
 	int repFd = 0;
 	int lockFd = -1;
@@ -127,18 +128,6 @@ main(int ac, char **av)
 	}
 
 	/*
-	 * If there is a replacement file, obtain a secure descriptor to it.
-	 */
-
-	if (repFile) {
-		repFd = GetReplaceStream(caller, repFile);
-		if (repFd < 0) {
-			printlogf(0, "unable to read replacement file %s\n", repFile);
-			exit(1);
-		}
-	}
-
-	/*
 	 * Change directory to our crontab directory
 	 */
 
@@ -192,7 +181,6 @@ main(int ac, char **av)
 				FILE *fi;
 				int fd;
 				int n;
-				char tmp[] = TMPDIR "/crontab.XXXXXX";
 				char buf[RW_BUFFER];
 
 				/*
@@ -201,21 +189,19 @@ main(int ac, char **av)
 				 * EditFile changes user if necessary, and runs editor on temp file
 				 * Then we delete the temp file, keeping its fd as repFd
 				 */
-				if ((fd = mkstemp(tmp)) >= 0) {
+				if ((fd = mkstemp(edFile)) >= 0) {
 					fchown(fd, getuid(), getgid());
 					if ((fi = fopen(pas->pw_name, "r"))) {
 						while ((n = fread(buf, 1, sizeof(buf), fi)) > 0)
 							write(fd, buf, n);
 					}
-					EditFile(caller, tmp);
-					remove(tmp);
-					lseek(fd, 0L, 0);
-					repFd = fd;
+					close(fd);
+					EditFile(caller, edFile);
+					repFile = edFile;
 				} else {
-					printlogf(0, "unable to create %s: %s\n", tmp, strerror(errno));
+					printlogf(0, "unable to create %s: %s\n", edFile, strerror(errno));
 					exit(1);
 				}
-
 			}
 			option = REPLACE;
 			/* fall through */
@@ -236,6 +222,18 @@ main(int ac, char **av)
 				sigaction(SIGTERM, &sa, NULL);
 
 				/*
+				 * If there is a replacement file, obtain a secure descriptor to it.
+				*/
+
+				if (repFile) {
+					repFd = GetReplaceStream(caller, repFile);
+					if (repFd < 0) {
+						printlogf(0, "unable to read replacement file %s\n", repFile);
+						exit(1);
+					}
+				}
+
+				/*
 				 * Read from repFd, write to fd for "$CDir/$USER.new"
 				 */
 				snprintf(NewPath, sizeof(NewPath), "%s.new", pas->pw_name);
@@ -253,6 +251,8 @@ main(int ac, char **av)
 						   );
 				}
 				close(repFd);
+				if (repFile == edFile )
+					remove(edFile);
 			}
 			break;
 		case DELETE:
