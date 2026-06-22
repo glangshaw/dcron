@@ -187,7 +187,7 @@ main(int ac, char **av)
 				 * Create temp file with perm 0600 and O_EXCL flag, ensuring that this call creates the file
 				 * Read from fi for "$CDir/$USER", write to fd for temp file
 				 * EditFile changes user if necessary, and runs editor on temp file
-				 * Then we delete the temp file, keeping its fd as repFd
+				 * Then we close the temp file and use it as repFile.
 				 */
 				if ((fd = mkstemp(edFile)) >= 0) {
 					fchown(fd, getuid(), getgid());
