@@ -7,6 +7,7 @@
  * usually setuid root, -c option only works if getuid() == geteuid()
  *
  * Copyright 1994 Matthew Dillon (dillon@apollo.backplane.com)
+ * Copyright 2026 Gary Langshaw (gary.langshaw@gmail.com)
  * May be distributed under the GNU General Public License
  */
 
@@ -42,6 +43,7 @@ int main(int ac, char **av)
     DELETE
   } option = NONE;
   struct passwd *pas;
+  char edFile[] = TMPDIR "/crontab.XXXXXX";
   char *repFile = NULL;
   int repFd = 0;
   int i;
@@ -154,19 +156,6 @@ int main(int ac, char **av)
   }
 
   /*
-   * If there is a replacement file, obtain a secure descriptor to it.
-   */
-
-  if (repFile)
-  {
-    repFd = GetReplaceStream(caller, repFile);
-    if (repFd < 0)
-    {
-      errx(1, "unable to read replacement file\n");
-    }
-  }
-
-  /*
    * Change directory to our crontab directory
    */
 
@@ -203,25 +192,23 @@ int main(int ac, char **av)
     FILE *fi;
     int fd;
     int n;
-    char tmp[] = TMPDIR "/crontab.XXXXXX";
     char buf[1024];
 
-    if ((fd = mkstemp(tmp)) >= 0)
+    if ((fd = mkstemp(edFile)) >= 0)
     {
-      chown(tmp, getuid(), getgid());
+      chown(edFile, getuid(), getgid());
       if ((fi = fopen(pas->pw_name, "r")))
       {
         while ((n = fread(buf, 1, sizeof(buf), fi)) > 0)
           write(fd, buf, n);
       }
-      EditFile(caller, tmp);
-      remove(tmp);
-      lseek(fd, 0L, 0);
-      repFd = fd;
+      close(fd);
+      EditFile(caller, edFile);
+      repFile = edFile;
     }
     else
     {
-      errx(1, "unable to create %s\n", tmp);
+      errx(1, "unable to create %s\n", edFile);
     }
   }
     option = REPLACE;
@@ -232,6 +219,18 @@ int main(int ac, char **av)
     char path[1024];
     int fd;
     int n;
+
+    /* If there is a replacement file, obtain a secure descriptor to it. */
+    if (repFile)
+    {
+      repFd = GetReplaceStream(caller, repFile);
+      if (repFile == edFile)
+        remove(edFile);
+      if (repFd < 0)
+      {
+        errx(1, "unable to read replacement file\n");
+      }
+    }
 
     snprintf(path, sizeof(path), "%s.new", pas->pw_name);
     if ((fd = open(path, O_CREAT | O_TRUNC | O_EXCL | O_APPEND | O_WRONLY,
