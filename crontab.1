@@ -4,22 +4,25 @@
 .SH NAME
 crontab \- manipulate per-user crontabs (Dillon's Cron)
 .SH SYNOPSIS
-.B crontab file [-u user]
+.B crontab file
 \- replace crontab from file
 
-.B crontab - [-u user]
+.B crontab \-
 \- replace crontab from stdin
 
-.B crontab -l [user]
+.B crontab -l
 \- list crontab for user
 
-.B crontab -e [user]
+.B crontab -e
 \- edit crontab for user
 
-.B crontab -d [user]
-\- delete crontab for user
+.B crontab -r
+\- remove crontab for user
 
-.B crontab -c dir
+.B -u user
+\- specify crontab user
+
+.B -c dir
 \- specify crontab directory
 .SH DESCRIPTION
 .B crontab

@@ -1,4 +1,3 @@
-
 /*
  * CRONTAB.C
  *
@@ -26,13 +25,14 @@
 #include "subs.h"
 
 const char *CDir = CRONTABS;
+const char *CDirOpt = NULL;
 int UserId;
 int LogLevel = 9;
 
 void EditFile(const char *user, const char *file);
 int GetReplaceStream(const char *user, const char *file);
 
-int main(int ac, char **av)
+int main(int argc, char *argv[])
 {
   enum
   {
@@ -44,10 +44,11 @@ int main(int ac, char **av)
   } option = NONE;
   struct passwd *pas;
   char edFile[] = TMPDIR "/crontab.XXXXXX";
-  char *repFile = NULL;
+  char *repFileName = NULL;
+  char *userName = NULL;
   int repFd = 0;
-  int i;
   char caller[256]; /* user that ran program */
+  int opt;
 
   UserId = getuid();
   if ((pas = getpwuid(UserId)) == NULL)
@@ -57,92 +58,81 @@ int main(int ac, char **av)
   }
   snprintf(caller, sizeof(caller), "%s", pas->pw_name);
 
-  i = 1;
-  if (ac > 1)
+#define ERRMSG_EXCLUSIVE_OPTION "only one of: -r, -e, -l can be specified."
+  while ((opt = getopt(argc, argv, "ldreu:")) != -1)
   {
-    if (av[1][0] == '-' && av[1][1] == 0)
+    if ( opt == '?' )
+      errx(1, "aborted. unrecognised option");
+    switch (opt)
     {
-      option = REPLACE;
-      ++i;
-    }
-    else if (av[1][0] != '-')
-    {
-      option = REPLACE;
-      ++i;
-      repFile = av[1];
+    case 'c':
+      CDirOpt = optarg;
+      break;
+    case 'u':
+      userName = optarg;
+      break;
+    case 'e':
+      if (option != NONE)
+        errx(1, ERRMSG_EXCLUSIVE_OPTION);
+      option = EDIT;
+      break;
+    case 'l':
+      if (option != NONE)
+        errx(1, ERRMSG_EXCLUSIVE_OPTION);
+      option = LIST;
+      break;
+    case 'd': /* for backward compatibility, POSIX option is -r */
+    case 'r':
+      if (option != NONE)
+        errx(1, ERRMSG_EXCLUSIVE_OPTION);
+      option = DELETE;
+      break;
+    default:
+      break;
     }
   }
+#undef ERRMSG_EXCLUSIVE_OPTION
 
-  for (; i < ac; ++i)
+
+  if (optind != argc && (option == LIST || option == EDIT || option == DELETE))
+    errx(1, "unexpected FILE argument: %s\n", argv[optind]);
+
+  if (argc > optind + 1)
+    errx(1, "too many arguments\n");
+
+  if ( option == NONE )
   {
-    char *ptr = av[i];
+    option = REPLACE;
+    if ( optind == argc - 1 )
+      repFileName = argv[optind];
+    else
+      repFileName = "-";
+  }
 
-    if (*ptr != '-')
-      break;
-    ptr += 2;
-
-    switch (ptr[-1])
+  if (userName)
+  {
+    if (getuid() == (uid_t)0)
     {
-    case 'l':
-      if (ptr[-1] == 'l')
-        option = LIST;
-      /* fall through */
-    case 'e':
-      if (ptr[-1] == 'e')
-        option = EDIT;
-      /* fall through */
-    case 'd':
-      if (ptr[-1] == 'd')
-        option = DELETE;
-      /* fall through */
-    case 'u':
-      if (i + 1 < ac && av[i + 1][0] != '-')
+      pas = getpwnam(userName);
+      if (pas)
       {
-        ++i;
-        if (getuid() == geteuid())
-        {
-          pas = getpwnam(av[i]);
-          if (pas)
-          {
-            UserId = pas->pw_uid;
-          }
-          else
-          {
-            errx(1, "user %s unknown\n", av[i]);
-          }
-        }
-        else
-        {
-          errx(1, "only the superuser may specify a user\n");
-        }
-      }
-      break;
-    case 'c':
-      if (getuid() == geteuid())
-      {
-        CDir = (*ptr) ? ptr : av[++i];
+        UserId = pas->pw_uid;
       }
       else
       {
-        errx(1, "-c option: superuser only\n");
+        errx(1, "user %s unknown\n", userName);
       }
-      break;
-    default:
-      i = ac;
-      break;
     }
+    else
+      errx(1, "only the superuser may specify a user\n");
   }
-  if (i != ac || option == NONE)
+
+  if (CDirOpt)
   {
-    printf("crontab " VERSION "\n");
-    printf("crontab file <opts>  replace crontab from file\n");
-    printf("crontab -    <opts>  replace crontab from stdin\n");
-    printf("crontab -u user      specify user\n");
-    printf("crontab -l [user]    list crontab for user\n");
-    printf("crontab -e [user]    edit crontab for user\n");
-    printf("crontab -d [user]    delete crontab for user\n");
-    printf("crontab -c dir       specify crontab directory\n");
-    exit(0);
+    if (getuid() == (uid_t)0)
+      CDir = CDirOpt;
+    else
+      errx(1, "-c option: superuser only\n");
   }
 
   /*
@@ -160,9 +150,7 @@ int main(int ac, char **av)
    */
 
   if (chdir(CDir) < 0)
-  {
     errx(1, "cannot change dir to %s: %s\n", CDir, strerror(errno));
-  }
 
   /*
    * Handle options as appropriate
@@ -204,7 +192,7 @@ int main(int ac, char **av)
       }
       close(fd);
       EditFile(caller, edFile);
-      repFile = edFile;
+      repFileName = edFile;
     }
     else
     {
@@ -212,7 +200,7 @@ int main(int ac, char **av)
     }
   }
     option = REPLACE;
-    /* fall through */
+  /* fall through */
   case REPLACE:
   {
     char buf[1024];
@@ -221,10 +209,10 @@ int main(int ac, char **av)
     int n;
 
     /* If there is a replacement file, obtain a secure descriptor to it. */
-    if (repFile)
+    if (repFileName)
     {
-      repFd = GetReplaceStream(caller, repFile);
-      if (repFile == edFile)
+      repFd = GetReplaceStream(caller, repFileName);
+      if (repFileName == edFile)
         remove(edFile);
       if (repFd < 0)
       {
@@ -332,9 +320,14 @@ int GetReplaceStream(const char *user, const char *file)
   if (ChangeUser(user, 0) < 0)
     exit(0);
 
-  fd = open(file, O_RDONLY);
+  if (strcmp("-", file) == 0)
+    fd = 0;
+  else
+    fd = open(file, O_RDONLY);
+
   if (fd < 0)
     errx(0, "unable to open %s\n", file);
+
   buf[0] = 0;
   write(filedes[1], buf, 1);
   while ((n = read(fd, buf, sizeof(buf))) > 0)
