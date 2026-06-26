@@ -27,9 +27,9 @@ cleano:
 	rm -f *.o
 
 install: crond crontab
-	install -o root -g root -m 0755 crond $(DESTDIR)$(SBINDIR)/crond
-	install -o root -g $(CRONTAB_GROUP) -m 4750 crontab $(DESTDIR)$(BINDIR)/crontab
-	install -o root -g root -m 0644 crontab.1 $(DESTDIR)$(MANDIR)/man1/crontab.1
-	install -o root -g root -m 0644 crond.8 $(DESTDIR)$(MANDIR)/man8/crond.8
+	install -D -o root -g root -m 0755 crond $(DESTDIR)$(SBINDIR)/crond
+	install -D -o root -g $(CRONTAB_GROUP) -m 4750 crontab $(DESTDIR)$(BINDIR)/crontab
+	install -D -o root -g root -m 0644 crontab.1 $(DESTDIR)$(MANDIR)/man1/crontab.1
+	install -D -o root -g root -m 0644 crond.8 $(DESTDIR)$(MANDIR)/man8/crond.8
 
 include depend.mk
