@@ -1,6 +1,6 @@
 
 /*
- * MAIN.C
+ * crond.c
  *
  * crond [-s dir] [-c dir] [-t dir] [-m user@host] [-M mailer] [-S|-L [file]] [-l level] [-b|-f|-d]
  * run as root, but NOT setuid root
