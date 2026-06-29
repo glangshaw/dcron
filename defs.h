@@ -1,13 +1,11 @@
 #ifndef DEFS_H
 #define DEFS_H
 
-/*
- * DEFS.H
- *
- * Copyright 1994-1998 Matthew Dillon (dillon@backplane.com)
- * Copyright 2026 Gary Langshaw (gary.langshaw@gmail.com)
- * May be distributed under the GNU General Public License
- */
+//  DEFS.H
+//
+//  Copyright 1994-1998 Matthew Dillon (dillon@backplane.com)
+//  Copyright 2026 Gary Langshaw (gary.langshaw@gmail.com)
+//  May be distributed under the GNU General Public License
 
 #ifndef CRONTABS
 #define CRONTABS "/var/lib/cron/crontabs"

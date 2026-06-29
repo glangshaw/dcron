@@ -1,10 +1,8 @@
-/*
- * DATABASE.C
- *
- * Copyright 1994 Matthew Dillon (dillon@apollo.backplane.com)
- * Copyright 2026 Gary Langshaw (gary.langshaw@gmail.com)
- * May be distributed under the GNU General Public License
- */
+//  database.c
+//
+//  Copyright 1994 Matthew Dillon (dillon@apollo.backplane.com)
+//  Copyright 2026 Gary Langshaw (gary.langshaw@gmail.com)
+//  May be distributed under the GNU General Public License
 
 #include "database.h"
 #include "defs.h"
@@ -41,13 +39,13 @@ const char *MonAry[] = {"jan", "feb", "mar", "apr", "may", "jun", "jul",
                         "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul",
                         "Aug", "Sep", "Oct", "Nov", "Dec", NULL};
 
-/*
- * Check the cron.update file in the specified directory.  If user_override
- * is NULL then the files in the directory belong to the user whos name is
- * the file, otherwise they belong to the user_override user.
- */
 void CheckUpdates(const char *dpath, const char *user_override)
 {
+  //  Check the cron.update file in the specified directory.  If
+  //  user_override is NULL then the files in the directory belong to
+  //  the user whos name is the file, otherwise they belong to the
+  //  user_override user.
+
   FILE *fi;
   char buf[256];
   char *ptr;
@@ -83,11 +81,10 @@ void SynchronizeDir(const char *dpath, const char *user_override,
   DIR *dir;
   char *path;
 
-  /*
-   * Delete all database files for this directory.  DeleteFile() will
-   * free *pfile and relink the *pfile pointer, or in the alternative will
-   * mark it as deleted.
-   */
+  //  Delete all database files for this directory.  DeleteFile() will
+  //  free *pfile and relink the *pfile pointer, or in the alternative
+  //  will mark it as deleted.
+
   pfile = &FileBase;
   while ((file = *pfile) != NULL)
   {
@@ -101,17 +98,15 @@ void SynchronizeDir(const char *dpath, const char *user_override,
     }
   }
 
-  /*
-   * Since we are resynchronizing the entire directory, remove the
-   * the CRONUPDATE file.
-   */
+  //  Since we are resynchronizing the entire directory, remove the
+  //  the CRONUPDATE file.
+
   asprintf(&path, "%s/%s", dpath, CRONUPDATE);
   remove(path);
   free(path);
 
-  /*
-   * Scan the specified directory
-   */
+  // Scan the specified directory
+
   if ((dir = opendir(dpath)) != NULL)
   {
     while ((den = readdir(dir)) != NULL)
@@ -135,12 +130,8 @@ void SynchronizeDir(const char *dpath, const char *user_override,
     }
     closedir(dir);
   }
-  else
-  {
-    if (initial_scan)
-      logn(3, "Unable to scan directory %s!\n", dpath);
-    /* softerror, do not exit the program */
-  }
+  else if (initial_scan) /* softerror, do not exit the program */
+    logn(3, "Unable to scan directory %s!\n", dpath);
 }
 
 void SynchronizeFile(const char *dpath, const char *fileName,
@@ -154,18 +145,16 @@ void SynchronizeFile(const char *dpath, const char *fileName,
   char *path;
   FILE *fi;
 
-  /*
-   * Limit entries
-   */
+  // Limit entries
+
   if (strcmp(userName, "root") == 0)
     maxEntries = 65535;
   else
     maxEntries = MAXLINES;
   maxLines = maxEntries * 10;
 
-  /*
-   * Delete any existing copy of this file
-   */
+  //  Delete any existing copy of this file
+
   pfile = &FileBase;
   while ((file = *pfile) != NULL)
   {
@@ -218,9 +207,7 @@ void SynchronizeFile(const char *dpath, const char *fileName,
 
         logn(7, "User %s Entry %s\n", userName, buf);
 
-        /*
-         * parse date ranges
-         */
+        //  parse date ranges
 
         line.cl_Minutes = ParseField(file->cf_UserName, 60, 0, 1, NULL, &ptr);
         line.cl_Hours =
@@ -232,14 +219,14 @@ void SynchronizeFile(const char *dpath, const char *fileName,
         line.cl_DayOfWeek =
             (uint8_t)ParseField(file->cf_UserName, 7, 0, 0, DowAry, &ptr);
 
-        if ( !line.cl_DayOfWeek  &&  !line.cl_DayOfMonth )
+        if (!line.cl_DayOfWeek && !line.cl_DayOfMonth)
         {
-            //  cl_DayOfWeek and cl_DayOfMonth are Or'd in TestJobs() to
-            //  determine when to run jobs.  If both are '*' then we
-            //  need to set at least one of them to ALL, but we'll
-            //  do both.
-            line.cl_DayOfMonth = ~(uint32_t)0;  // All Days of Month
-            line.cl_DayOfWeek  = ~(uint8_t)0;   // All Days of Week
+          //  cl_DayOfWeek and cl_DayOfMonth are Or'd in TestJobs() to
+          //  determine when to run jobs.  If both are '*' then we
+          //  need to set at least one of them to ALL, but we'll
+          //  do both.
+          line.cl_DayOfMonth = ~(uint32_t)0; /* All Days of Month */
+          line.cl_DayOfWeek = ~(uint8_t)0;   /* All Days of Week */
         }
 
         logn(7, "    bitsMins: %016" PRIX64 "\n", line.cl_Minutes);
@@ -248,9 +235,7 @@ void SynchronizeFile(const char *dpath, const char *fileName,
         logn(7, "    bitsMons: %04" PRIX16 "\n", line.cl_Month);
         logn(7, "    bitsDow:  %02" PRIX8 "\n", line.cl_DayOfWeek);
 
-        /*
-         * check failure
-         */
+        //  check failure
 
         if (ptr == NULL)
           continue;
@@ -258,9 +243,7 @@ void SynchronizeFile(const char *dpath, const char *fileName,
         *pline = calloc(1, sizeof(CronLine));
         **pline = line;
 
-        /*
-         * copy command
-         */
+        //  copy command
 
         (*pline)->cl_Shell = strdup(ptr);
 
@@ -296,9 +279,7 @@ uint64_t ParseField(char *user, int modvalue, int off, int star,
   {
     int skip = 0;
 
-    /*
-     * Handle numeric digit or symbol or '*'
-     */
+    //  Handle numeric digit or symbol or '*'
 
     if (*ptr == '*')
     {
@@ -337,9 +318,7 @@ uint64_t ParseField(char *user, int modvalue, int off, int star,
       }
     }
 
-    /*
-     * handle optional range '-'
-     */
+    //  handle optional range '-'
 
     if (skip == 0)
     {
@@ -353,10 +332,8 @@ uint64_t ParseField(char *user, int modvalue, int off, int star,
       continue;
     }
 
-    /*
-     * collapse single-value ranges, handle skipmark, and fill
-     * in the character array appropriately.
-     */
+    //  collapse single-value ranges, handle skipmark, and fill in the
+    //  character array appropriately.
 
     if (n2 < 0)
       n2 = n1;
@@ -364,10 +341,8 @@ uint64_t ParseField(char *user, int modvalue, int off, int star,
     if (*ptr == '/')
       skip = strtol(ptr + 1, &ptr, 10);
 
-    /*
-     * fill array, using a failsafe is the easiest way to prevent
-     * an endless loop
-     */
+    //  fill array, using a failsafe is the easiest way to prevent an
+    //  endless loop
 
     if (n1 != 0 || n2 != modvalue - 1 || skip != 1 || star == 1)
     {
@@ -413,16 +388,14 @@ uint64_t ParseField(char *user, int modvalue, int off, int star,
   return bits;
 }
 
-/*
- *  DeleteFile() - destroy a CronFile.
- *
- *  The CronFile (*pfile) is destroyed if possible, and marked cf_Deleted
- *  if there are still active processes running on it.  *pfile is relinked
- *  on success.
- */
-
 void DeleteFile(CronFile **pfile)
 {
+  //  DeleteFile() - destroy a CronFile.
+  //
+  //  The CronFile (*pfile) is destroyed if possible, and marked
+  //  cf_Deleted if there are still active processes running on it.
+  //  *pfile is relinked on success.
+
   CronFile *file = *pfile;
   CronLine **pline = &file->cf_LineBase;
   CronLine *line;
@@ -454,22 +427,18 @@ void DeleteFile(CronFile **pfile)
   }
 }
 
-/*
- * TestJobs()
- *
- * determine which jobs need to be run.  Under normal conditions, the
- * period is about a minute (one scan).  Worst case it will be one
- * hour (60 scans).
- */
-
 int TestJobs(time_t t1, time_t t2)
 {
+  //  TestJobs()
+  //
+  //  determine which jobs need to be run.  Under normal conditions,
+  //  the period is about a minute (one scan).  Worst case it will be
+  //  one hour (60 scans).
+
   int nJobs = 0;
   time_t t;
 
-  /*
-   * Find jobs > t1 and <= t2
-   */
+  //  Find jobs > t1 and <= t2
 
   for (t = t1 - t1 % 60; t <= t2; t += 60)
   {
@@ -548,15 +517,13 @@ void RunJobs(void)
   }
 }
 
-/*
- * CheckJobs() - check for job completion
- *
- * Check for job completion, return number of jobs still running after
- * all done.
- */
-
 int CheckJobs(void)
 {
+  //  CheckJobs() - check for job completion
+  //
+  //  Check for job completion, return number of jobs still running
+  //  after all done.
+
   CronFile *file;
   CronLine *line;
   int nStillRunning = 0;

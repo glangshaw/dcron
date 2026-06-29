@@ -1,11 +1,8 @@
-
-/*
- * SUBS.C
- *
- * Copyright 1994 Matthew Dillon (dillon@apollo.backplane.com)
- * Copyright 2026 Gary Langshaw (gary.langshaw@gmail.com)
- * May be distributed under the GNU General Public License
- */
+//  SUBS.C
+//
+//  Copyright 1994 Matthew Dillon (dillon@apollo.backplane.com)
+//  Copyright 2026 Gary Langshaw (gary.langshaw@gmail.com)
+//  May be distributed under the GNU General Public License
 
 #include "subs.h"
 #include "defs.h"
@@ -20,7 +17,6 @@
 
 static void vlog(int level, int fd, const char *ctl, va_list va);
 static int slog(char *buf, const char *ctl, int nmax, va_list va, int useDate);
-
 
 void logn(int level, const char *ctl, ...)
 {
@@ -66,9 +62,9 @@ static void vlog(int level, int fd, const char *ctl, va_list va)
 
 int slog(char *buf, const char *ctl, int nmax, va_list va, int useDate)
 {
-    time_t t;
-    struct tm *tp;
-    size_t dateStrLen = 0;
+  time_t t;
+  struct tm *tp;
+  size_t dateStrLen = 0;
 
   buf[0] = 0;
   if (useDate)
@@ -77,7 +73,7 @@ int slog(char *buf, const char *ctl, int nmax, va_list va, int useDate)
     tp = localtime(&t);
     dateStrLen = strftime(buf, 128, "%d-%b-%Y %H:%M  ", tp);
   }
-    vsnprintf(buf + dateStrLen, nmax, ctl, va);
+  vsnprintf(buf + dateStrLen, nmax, ctl, va);
   return (strlen(buf));
 }
 
@@ -85,9 +81,7 @@ int ChangeUser(const char *user, int dochdir)
 {
   struct passwd *pas;
 
-  /*
-   * Obtain password entry and change privilages
-   */
+  // Obtain password entry and change privileges
 
   if ((pas = getpwnam(user)) == 0)
   {
@@ -98,9 +92,7 @@ int ChangeUser(const char *user, int dochdir)
   setenv("HOME", pas->pw_dir, 1);
   setenv("SHELL", "/bin/sh", 1);
 
-  /*
-   * Change running state to the user in question
-   */
+  //  Change running state to the user in question
 
   if (initgroups(user, pas->pw_gid) < 0)
   {

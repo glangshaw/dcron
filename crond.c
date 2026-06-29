@@ -1,12 +1,10 @@
-/*
- * crond.c
- *
- * run as root, but NOT setuid root
- *
- * Copyright 1994 Matthew Dillon (dillon@apollo.backplane.com)
- * Copyright 2026 Gary Langshaw (gary.langshaw@gmail.com)
- * May be distributed under the GNU General Public License
- */
+//  crond.c
+//
+//  run as root, but NOT setuid root
+//
+//  Copyright 1994 Matthew Dillon (dillon@apollo.backplane.com)
+//  Copyright 2026 Gary Langshaw (gary.langshaw@gmail.com)
+//  May be distributed under the GNU General Public License
 
 #include "database.h"
 #include "defs.h"
@@ -47,7 +45,7 @@ volatile int sig_chld = 0;
 
 void SigHandler(int sig)
 {
-  switch( sig )
+  switch (sig)
   {
   case SIGCHLD:
     sig_chld = 1;
@@ -68,20 +66,21 @@ void RunMainLoop()
 
   for (;;)
   {
-    /* synchronize to 1 second after the minute, minimum sleep of 1 second. */
+    //  synchronize to 1 second after the minute, minimum sleep of 1 second.
+
     stime = sleep(WAKEUP_INTERVAL + 1 - time(NULL) % WAKEUP_INTERVAL);
     t2 = time(NULL);
 
     logn(7, "Wakeup(%s): %s", ((stime > 0) ? "interrupted" : "scheduled"),
          ctime(&t2));
 
-    /* check for disparity.  Disparities over an hour either way
-     * result in resynchronization.  A reverse-indexed disparity
-     * less then an hour causes us to effectively sleep until we
-     * match the original time (i.e. no re-execution of jobs that
-     * have just been run).  A forward-indexed disparity less then
-     * an hour causes intermediate jobs to be run, but only once
-     * in the worst case. */
+    //  Check for disparity: disparities over an hour either way
+    //  result in resynchronization.  A reverse-indexed disparity less
+    //  then an hour causes us to effectively sleep until we match the
+    //  original time (i.e. no re-execution of jobs that have just
+    //  been run).  A forward-indexed disparity less then an hour
+    //  causes intermediate jobs to be run, but only once in the worst
+    //  case.
 
     if (t2 < t1 - ONE_HOUR || t2 > t1 + ONE_HOUR)
     {
@@ -94,21 +93,22 @@ void RunMainLoop()
     {
       if (rescan + RESCAN_INTERVAL <= t2)
       {
-        /* The directory is rescanned once an hour to deal with any
-           screwups. */
+        //  The directory is rescanned once an hour to deal with any
+        //  screwups.
         rescan = t2 - t2 % RESCAN_INTERVAL;
         SynchronizeDir(CDir, NULL, 0);
         SynchronizeDir(SCDir, "root", 0);
       }
       else
       {
-        /* The file 'cron.update' is checked to determine new cron
-           jobs. */
+        //  The file 'cron.update' is checked to determine new cron
+        //  jobs.
         CheckUpdates(CDir, NULL);
         CheckUpdates(SCDir, "root");
       }
-      /* when running jobs, the inequality used is greater but
-         not equal to t1, and less then or equal to t2. */
+
+      //  when running jobs, the inequality used is greater but
+      //  not equal to t1, and less then or equal to t2.
       TestJobs(t1, t2);
       RunJobs();
       t1 = t2;
@@ -124,9 +124,7 @@ int main(int argc, char **argv)
   int opt;
   struct sigaction sa;
 
-  /*
-   * parse options
-   */
+  //  parse options
 
   DaemonUid = getuid();
 
@@ -151,11 +149,8 @@ int main(int argc, char **argv)
     }
   }
 
-  /*
-   * close stdin and stdout (stderr normally redirected by caller).
-   * close unused descriptors
-   * optional detach from controlling terminal
-   */
+  //  close stdin, stdout, and unused descriptors.
+  //  (stderr normally redirected by caller).
 
   fclose(stdin);
   fclose(stdout);
@@ -193,7 +188,7 @@ int main(int argc, char **argv)
 
   logn(5, "%s " VERSION " dillon, started\n", argv[0]);
 
-  /* establish a signal handler for SIGCHLD */
+  //  establish a signal handler for SIGCHLD.
 
   sa.sa_handler = SigHandler;
   sigemptyset(&sa.sa_mask);

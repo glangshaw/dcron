@@ -1,14 +1,8 @@
-/*
- * CRONTAB.C
- *
- * CRONTAB
- *
- * usually setuid root, -c option only works if getuid() == geteuid()
- *
- * Copyright 1994 Matthew Dillon (dillon@apollo.backplane.com)
- * Copyright 2026 Gary Langshaw (gary.langshaw@gmail.com)
- * May be distributed under the GNU General Public License
- */
+//  crontab.c
+//
+//  Copyright 1994 Matthew Dillon (dillon@apollo.backplane.com)
+//  Copyright 2026 Gary Langshaw (gary.langshaw@gmail.com)
+//  May be distributed under the GNU General Public License
 
 #include <err.h>
 #include <errno.h>
@@ -61,7 +55,7 @@ int main(int argc, char *argv[])
 #define ERRMSG_EXCLUSIVE_OPTION "only one of: -r, -e, -l can be specified."
   while ((opt = getopt(argc, argv, "ldreu:")) != -1)
   {
-    if ( opt == '?' )
+    if (opt == '?')
       errx(1, "aborted. unrecognised option");
     switch (opt)
     {
@@ -93,17 +87,16 @@ int main(int argc, char *argv[])
   }
 #undef ERRMSG_EXCLUSIVE_OPTION
 
-
   if (optind != argc && (option == LIST || option == EDIT || option == DELETE))
     errx(1, "unexpected FILE argument: %s\n", argv[optind]);
 
   if (argc > optind + 1)
     errx(1, "too many arguments\n");
 
-  if ( option == NONE )
+  if (option == NONE)
   {
     option = REPLACE;
-    if ( optind == argc - 1 )
+    if (optind == argc - 1)
       repFileName = argv[optind];
     else
       repFileName = "-";
@@ -135,9 +128,7 @@ int main(int argc, char *argv[])
       errx(1, "-c option: superuser only\n");
   }
 
-  /*
-   * Get password entry
-   */
+  //  Get password entry
 
   if ((pas = getpwuid(UserId)) == NULL)
   {
@@ -145,16 +136,12 @@ int main(int argc, char *argv[])
     exit(1);
   }
 
-  /*
-   * Change directory to our crontab directory
-   */
+  //  Change directory to our crontab directory
 
   if (chdir(CDir) < 0)
     errx(1, "cannot change dir to %s: %s\n", CDir, strerror(errno));
 
-  /*
-   * Handle options as appropriate
-   */
+  //  Handle options as appropriate
 
   switch (option)
   {
@@ -200,7 +187,7 @@ int main(int argc, char *argv[])
     }
   }
     option = REPLACE;
-  /* fall through */
+    // fall through.
   case REPLACE:
   {
     char buf[1024];
@@ -208,7 +195,7 @@ int main(int argc, char *argv[])
     int fd;
     int n;
 
-    /* If there is a replacement file, obtain a secure descriptor to it. */
+    //  If there is a replacement file, obtain a secure descriptor to it.
     if (repFileName)
     {
       repFd = GetReplaceStream(caller, repFileName);
@@ -247,10 +234,8 @@ int main(int argc, char *argv[])
     break;
   }
 
-  /*
-   *  Bump notification file.  Handle window where crond picks file up
-   *  before we can write our entry out.
-   */
+  //   Bump notification file.  Handle window where crond picks file
+  //   up before we can write our entry out.
 
   if (option == REPLACE || option == DELETE)
   {
@@ -267,7 +252,6 @@ int main(int argc, char *argv[])
         break;
       }
       fclose(fo);
-      /* loop */
     }
     if (fo == NULL)
     {
@@ -275,7 +259,7 @@ int main(int argc, char *argv[])
     }
   }
   (volatile void)exit(0);
-  /* not reached */
+  // not reached.
 }
 
 int GetReplaceStream(const char *user, const char *file)
@@ -298,10 +282,7 @@ int GetReplaceStream(const char *user, const char *file)
   }
   if (pid > 0)
   {
-    /*
-     * PARENT
-     */
-
+    //  PARENT
     close(filedes[1]);
     if (read(filedes[0], buf, 1) != 1)
     {
@@ -311,9 +292,7 @@ int GetReplaceStream(const char *user, const char *file)
     return (filedes[0]);
   }
 
-  /*
-   * CHILD
-   */
+  //  CHILD
 
   close(filedes[0]);
 
@@ -343,9 +322,7 @@ void EditFile(const char *user, const char *file)
 
   if ((pid = fork()) == 0)
   {
-    /*
-     * CHILD - change user and run editor
-     */
+    //  CHILD - change user and run editor
     const char *ptr;
     char visual[1024];
 
@@ -361,9 +338,7 @@ void EditFile(const char *user, const char *file)
   }
   if (pid < 0)
   {
-    /*
-     * PARENT - failure
-     */
+    //  PARENT - failure
     perror("fork");
     exit(1);
   }

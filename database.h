@@ -1,13 +1,11 @@
 #ifndef DATABASE_H
 #define DATABASE_H
 
-/*
- * DATABASE.H
- *
- * Copyright 1994-1998 Matthew Dillon (dillon@backplane.com)
- * Copyright 2026 Gary Langshaw (gary.langshaw@gmail.com)
- * May be distributed under the GNU General Public License
- */
+//  database.c
+//
+//  Copyright 1994-1998 Matthew Dillon (dillon@backplane.com)
+//  Copyright 2026 Gary Langshaw (gary.langshaw@gmail.com)
+//  May be distributed under the GNU General Public License
 
 #include <time.h>
 
