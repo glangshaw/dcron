@@ -1,4 +1,3 @@
-
 /*
  * DATABASE.C
  *
@@ -8,11 +7,12 @@
  */
 
 #include "database.h"
-#include "subs.h"
 #include "defs.h"
 #include "job.h"
+#include "subs.h"
 
 #include <dirent.h>
+#include <inttypes.h>
 #include <limits.h>
 #include <pwd.h>
 #include <stdio.h>
@@ -26,8 +26,8 @@
 
 void SynchronizeFile(const char *dpath, const char *fname, const char *uname);
 void DeleteFile(CronFile **pfile);
-char *ParseField(char *user, char *ary, int modvalue, int off, int star,
-                 const char **names, char *ptr);
+uint64_t ParseField(char *user, int modvalue, int off, int star,
+                    const char **names, char **pptr);
 
 CronFile *FileBase;
 
@@ -222,11 +222,31 @@ void SynchronizeFile(const char *dpath, const char *fileName,
          * parse date ranges
          */
 
-        ptr = ParseField(file->cf_UserName, line.cl_Mins, 60, 0, 1, NULL, ptr);
-        ptr = ParseField(file->cf_UserName, line.cl_Hrs, 24, 0, 1, NULL, ptr);
-        ptr = ParseField(file->cf_UserName, line.cl_Days, 32, 0, 1, NULL, ptr);
-        ptr = ParseField(file->cf_UserName, line.cl_Mons, 12, -1, 1, MonAry, ptr);
-        ptr = ParseField(file->cf_UserName, line.cl_Dow, 7, 0, 0, DowAry, ptr);
+        line.cl_Minutes = ParseField(file->cf_UserName, 60, 0, 1, NULL, &ptr);
+        line.cl_Hours =
+            (uint32_t)ParseField(file->cf_UserName, 24, 0, 1, NULL, &ptr);
+        line.cl_DayOfMonth =
+            (uint32_t)ParseField(file->cf_UserName, 32, 0, 0, NULL, &ptr);
+        line.cl_Month =
+            (uint16_t)ParseField(file->cf_UserName, 12, -1, 1, MonAry, &ptr);
+        line.cl_DayOfWeek =
+            (uint8_t)ParseField(file->cf_UserName, 7, 0, 0, DowAry, &ptr);
+
+        if ( !line.cl_DayOfWeek  &&  !line.cl_DayOfMonth )
+        {
+            //  cl_DayOfWeek and cl_DayOfMonth are Or'd in TestJobs() to
+            //  determine when to run jobs.  If both are '*' then we
+            //  need to set at least one of them to ALL, but we'll
+            //  do both.
+            line.cl_DayOfMonth = ~(uint32_t)0;  // All Days of Month
+            line.cl_DayOfWeek  = ~(uint8_t)0;   // All Days of Week
+        }
+
+        logn(7, "    bitsMins: %016" PRIX64 "\n", line.cl_Minutes);
+        logn(7, "    bitsHrs:  %08" PRIX32 "\n", line.cl_Hours);
+        logn(7, "    bitsDays: %08" PRIX32 "\n", line.cl_DayOfMonth);
+        logn(7, "    bitsMons: %04" PRIX16 "\n", line.cl_Month);
+        logn(7, "    bitsDow:  %02" PRIX8 "\n", line.cl_DayOfWeek);
 
         /*
          * check failure
@@ -261,15 +281,16 @@ void SynchronizeFile(const char *dpath, const char *fileName,
   free(path);
 }
 
-char *ParseField(char *user, char *ary, int modvalue, int off, int star,
-                 const char **names, char *ptr)
+uint64_t ParseField(char *user, int modvalue, int off, int star,
+                    const char **names, char **pptr)
 {
-  char *base = ptr;
+  char *ptr = *pptr;
   int n1 = -1;
   int n2 = -1;
+  uint64_t bits = 0;
 
-  if (base == NULL)
-    return (NULL);
+  if (*pptr == NULL)
+    return 0;
 
   while (*ptr != ' ' && *ptr != '\t' && *ptr != '\n')
   {
@@ -322,8 +343,9 @@ char *ParseField(char *user, char *ary, int modvalue, int off, int star,
 
     if (skip == 0)
     {
-      logn(5, "failed user %s parsing %s\n", user, base);
-      return (NULL);
+      logn(5, "failed user %s parsing %s\n", user, *pptr);
+      *pptr = NULL;
+      return 0;
     }
     if (*ptr == '-' && n2 < 0)
     {
@@ -347,7 +369,7 @@ char *ParseField(char *user, char *ary, int modvalue, int off, int star,
      * an endless loop
      */
 
-    if ( n1 != 0 || n2 != modvalue - 1 || skip != 1 || star == 1 )
+    if (n1 != 0 || n2 != modvalue - 1 || skip != 1 || star == 1)
     {
       int s0 = 1;
       int failsafe = 1024;
@@ -359,15 +381,16 @@ char *ParseField(char *user, char *ary, int modvalue, int off, int star,
 
         if (--s0 == 0)
         {
-          ary[n1] = 1;
+          bits |= (uint64_t)1 << n1;
           s0 = skip;
         }
       } while (n1 != n2 && --failsafe);
 
       if (failsafe == 0)
       {
-        logn(5, "failed user %s parsing %s\n", user, base);
-        return (NULL);
+        logn(5, "failed user %s parsing %s\n", user, *pptr);
+        *pptr = NULL;
+        return 0;
       }
     }
     if (*ptr != ',')
@@ -376,25 +399,18 @@ char *ParseField(char *user, char *ary, int modvalue, int off, int star,
     n1 = -1;
     n2 = -1;
   }
-
   if (*ptr != ' ' && *ptr != '\t' && *ptr != '\n')
   {
-    logn(5, "failed user %s parsing %s\n", user, base);
-    return (NULL);
+    logn(5, "failed user %s parsing %s\n", user, *pptr);
+    *pptr = NULL;
+    return 0;
   }
 
   while (*ptr == ' ' || *ptr == '\t' || *ptr == '\n')
     ++ptr;
 
-  {
-    int i;
-
-    for (i = 0; i < modvalue; ++i)
-      logn(7, "%d", ary[i]);
-    logn(7, "\n");
-  }
-
-  return (ptr);
+  *pptr = ptr;
+  return bits;
 }
 
 /*
@@ -463,6 +479,12 @@ int TestJobs(time_t t1, time_t t2)
       CronFile *file;
       CronLine *line;
 
+      uint64_t minMask = (uint64_t)1 << tp->tm_min;
+      uint64_t hrsMask = (uint32_t)1 << tp->tm_hour;
+      uint64_t dayMask = (uint32_t)1 << tp->tm_mday;
+      uint64_t monMask = (uint64_t)1 << tp->tm_mon;
+      uint64_t dowMask = (uint64_t)1 << tp->tm_wday;
+
       for (file = FileBase; file; file = file->cf_Next)
       {
         logn(7, "FILE %s/%s (user %s):\n", file->cf_DPath, file->cf_FileName,
@@ -472,9 +494,9 @@ int TestJobs(time_t t1, time_t t2)
         for (line = file->cf_LineBase; line; line = line->cl_Next)
         {
           logn(7, "    LINE %s\n", line->cl_Shell);
-          if (line->cl_Mins[tp->tm_min] && line->cl_Hrs[tp->tm_hour] &&
-              (line->cl_Days[tp->tm_mday] || line->cl_Dow[tp->tm_wday]) &&
-              line->cl_Mons[tp->tm_mon])
+          if (line->cl_Minutes & minMask && line->cl_Hours & hrsMask &&
+              (line->cl_DayOfMonth & dayMask || line->cl_DayOfWeek & dowMask) &&
+              line->cl_Month & monMask)
           {
             logn(7, "    JobToDo: %d %s\n", line->cl_Pid, line->cl_Shell);
             if (line->cl_Pid > 0)

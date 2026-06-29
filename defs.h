@@ -9,7 +9,6 @@
  * May be distributed under the GNU General Public License
  */
 
-
 #ifndef CRONTABS
 #define CRONTABS "/var/lib/cron/crontabs"
 #endif
@@ -45,6 +44,8 @@
 
 #define VERSION "V3.2"
 
+#include <stdint.h>
+
 typedef struct CronFile
 {
   struct CronFile *cf_Next;
@@ -60,15 +61,16 @@ typedef struct CronFile
 typedef struct CronLine
 {
   struct CronLine *cl_Next;
-  char *cl_Shell;   /* shell command */
-  int cl_Pid;       /* running pid, 0, or armed (-1) */
-  int cl_MailFlag;  /* running pid is for mail */
-  int cl_MailPos;   /* 'empty file' size */
-  char cl_Mins[60]; /* 0-59 */
-  char cl_Hrs[24];  /* 0-23 */
-  char cl_Days[32]; /* 1-31 */
-  char cl_Mons[12]; /* 0-11 */
-  char cl_Dow[7];   /* 0-6, beginning sunday */
+  char *cl_Shell;         /* shell command */
+  int cl_Pid;             /* running pid, 0, or armed (-1) */
+  int cl_MailFlag;        /* running pid is for mail */
+  int cl_MailPos;         /* 'empty file' size */
+  uint64_t cl_Minutes;    /* bitmask for minutes 2^n where n = 0..59 */
+  uint32_t cl_Hours;      /* bitmask for hours 2^n where n = 0..23 */
+  uint32_t cl_DayOfMonth; /* bitmask for days 2^n where n = 1..31, bit 0 unused */
+  uint16_t cl_Month;      /* bitmask for minutes 2^n where n = 0..11 */
+  uint8_t cl_DayOfWeek;   /* bitmask for days of week 2^n where n = 0..6,
+                             beginning Sunday */
 } CronLine;
 
 #define RUN_RANOUT 1
@@ -80,4 +82,4 @@ extern int LogLevel;
 #include <sys/types.h>
 extern uid_t DaemonUid;
 
-#endif  /* DEFS_H */
+#endif /* DEFS_H */

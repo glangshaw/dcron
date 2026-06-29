@@ -8,7 +8,7 @@ SBINDIR = $(PREFIX)/sbin
 
 CRONTAB_GROUP = users
 
-CFLAGS = -O2 -ansi -pedantic -Wpedantic -Wall -Wextra
+CFLAGS = -O2 --std=c99 -pedantic -Wpedantic -Wall -Wextra
 CPPFLAGS = -D_DEFAULT_SOURCE
 
 CROND_OBJS = crond.o subs.o database.o job.o
