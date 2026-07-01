@@ -445,15 +445,15 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 						if (line.cl_Delay == 0)
 							line.cl_Delay = 60;
 						/* all minutes are permitted */
-						for (j=0; j<60; ++j)
+						for (j=0; j<FIELD_MINUTES; ++j)
 							line.cl_Mins[j] = 1;
-						for (j=0; j<24; ++j)
+						for (j=0; j<FIELD_HOURS; ++j)
 							line.cl_Hrs[j] = 1;
-						for (j=0; j<31; ++j)
+						for (j=0; j<FIELD_M_DAYS; ++j)
 							line.cl_Days[j] = 1;
-						for (j=0; j<12; ++j)
+						for (j=0; j<FIELD_MONTHS; ++j)
 							line.cl_Mons[j] = 1;
-						for (j=0; j<7; ++j)
+						for (j=0; j<FIELD_W_DAYS; ++j)
 							line.cl_Dow[j] = ALL_DOW;
 					}
 
@@ -1289,11 +1289,11 @@ PrintLine(CronLine *line)
 	printlogf(LOG_DEBUG, "  PID:     %d\n", line->cl_Pid);
 
 	printlogf(LOG_DEBUG, "  Mins:    ");
-	for (i = 0; i < 60; ++i)
+	for (i = 0; i < FIELD_MINUTES; ++i)
 		printlogf(LOG_DEBUG, "%d", line->cl_Mins[i]);
 
 	printlogf(LOG_DEBUG, "\n  Hrs:     ");
-	for (i = 0; i < 24; ++i)
+	for (i = 0; i < FIELD_HOURS; ++i)
 		printlogf(LOG_DEBUG, "%d", line->cl_Hrs[i]);
 
 	printlogf(LOG_DEBUG, "\n  Days:    ");
@@ -1301,11 +1301,11 @@ PrintLine(CronLine *line)
 		printlogf(LOG_DEBUG, "%d", line->cl_Days[i]);
 
 	printlogf(LOG_DEBUG, "\n  Mons:    ");
-	for (i = 0; i < 12; ++i)
+	for (i = 0; i < FIELD_MONTHS; ++i)
 		printlogf(LOG_DEBUG, "%d", line->cl_Mons[i]);
 
 	printlogf(LOG_DEBUG, "\n  Dow:     ");
-	for (i = 0; i < 7; ++i)
+	for (i = 0; i < FIELD_W_DAYS; ++i)
 		printlogf(LOG_DEBUG, "%02x ", line->cl_Dow[i]);
 	printlogf(LOG_DEBUG, "\n\n");
 }
