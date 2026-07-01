@@ -109,7 +109,7 @@
 
 #define FIELD_MINUTES   60
 #define FIELD_HOURS     24
-#define FIELD_M_DAYS    32
+#define FIELD_M_DAYS    31
 #define FIELD_MONTHS    12
 #define FIELD_W_DAYS     7
 
@@ -157,7 +157,7 @@ typedef struct CronLine {
     int		cl_MailPos;	/* 'empty file' size			*/
     char	cl_Mins[FIELD_MINUTES];	/* 0-59				*/
     char	cl_Hrs[FIELD_HOURS];	/* 0-23					*/
-    char	cl_Days[FIELD_M_DAYS];	/* 1-31					*/
+    char	cl_Days[FIELD_M_DAYS];	/* 0-30, offset -1	*/
     char	cl_Mons[FIELD_MONTHS];	/* 0-11				*/
     char	cl_Dow[FIELD_W_DAYS];	/* 0-6, beginning sunday		*/
 } CronLine;

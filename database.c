@@ -449,8 +449,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 							line.cl_Mins[j] = 1;
 						for (j=0; j<24; ++j)
 							line.cl_Hrs[j] = 1;
-						for (j=1; j<32; ++j)
-							/* days are numbered 1..31 */
+						for (j=0; j<31; ++j)
 							line.cl_Days[j] = 1;
 						for (j=0; j<12; ++j)
 							line.cl_Mons[j] = 1;
@@ -470,7 +469,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 							NULL, ptr);
 					ptr = ParseField(file->cf_UserName, line.cl_Hrs,  FIELD_HOURS, 0, 1,
 							NULL, ptr);
-					ptr = ParseField(file->cf_UserName, line.cl_Days, FIELD_M_DAYS, 0, 1,
+					ptr = ParseField(file->cf_UserName, line.cl_Days, FIELD_M_DAYS, -1, 1,
 							NULL, ptr);
 					ptr = ParseField(file->cf_UserName, line.cl_Mons, FIELD_MONTHS, -1, 1,
 							MonAry, ptr);
@@ -833,8 +832,8 @@ ParseField(char *user, char *ary, int modvalue, int offset, int onvalue, const c
  * 2) DoM is * and DoW is specific; the task runs weekly on the specified DoW(s)
  * 3) DoM is specific and DoW is *; the task runs on the specified DoM, regardless
  *    of which day of the week they fall
- * 4) DoM is in the range [1..5] and DoW is specific; the task runs on the Nth
- *    specified DoW. DoM > 5 means the last such DoW in that month
+ * 4) DoM is in the range [0..4] and DoW is specific; the task runs on the Nth
+ *    specified DoW. DoM > 4 means the last such DoW in that month
  */
 void
 FixDayDow(CronLine *line)
@@ -852,7 +851,7 @@ FixDayDow(CronLine *line)
 		}
 	}
 
-	for (i = 1; i < arysize(line->cl_Days); ++i) {
+	for (i = 0; i < arysize(line->cl_Days); ++i) {
 		if (line->cl_Days[i] == 0) {
 			/* '*' was NOT specified in the Date field on this CronLine */
 			DomStar = 0;
@@ -865,15 +864,14 @@ FixDayDow(CronLine *line)
 		return;
 
 	/* Set individual bits within the DoW mask... */
-	for (i = 1; i < arysize(line->cl_Days); ++i) {
+	for (i = 0; i < arysize(line->cl_Days); ++i) {
 		if (line->cl_Days[i]) {
-			if (i < 6)
-				mask |= 1 << (i - 1);
+			if (i < 5)
+				mask |= 1 << i;
 			else
 				mask |= LAST_DOW;
 		}
 	}
-
 	/* and apply the mask to each DoW element */
 	for (i = 0; i < arysize(line->cl_Dow); ++i) {
 		if (line->cl_Dow[i])
@@ -1033,7 +1031,7 @@ TestJobs(time_t t1, time_t t2)
 						if (line->cl_Mins[tp->tm_min] &&
 								line->cl_Hrs[tp->tm_hour] &&
 								line->cl_Mons[tp->tm_mon] &&
-								(line->cl_Days[tp->tm_mday] && n_wday & line->cl_Dow[tp->tm_wday])
+								(line->cl_Days[tp->tm_mday - 1] && n_wday & line->cl_Dow[tp->tm_wday])
 						   ) {
 							if (line->cl_NotUntil)
 								line->cl_NotUntil = t2 - t2 % 60 + line->cl_Delay; /* save what minute this job was scheduled/started waiting, plus cl_Delay */
@@ -1107,7 +1105,7 @@ ArmJob(CronFile *file, CronLine *line, time_t t1, time_t t2)
 							if (line->cl_Mins[tp->tm_min] &&
 									line->cl_Hrs[tp->tm_hour] &&
 									line->cl_Mons[tp->tm_mon] &&
-									(line->cl_Days[tp->tm_mday] && n_wday & line->cl_Dow[tp->tm_wday])
+									(line->cl_Days[tp->tm_mday - 1] && n_wday & line->cl_Dow[tp->tm_wday])
 							   ) {
 								/* notifier will run soon enough, we wait for it */
 								waiter->cw_Flag = -1;
@@ -1299,7 +1297,7 @@ PrintLine(CronLine *line)
 		printlogf(LOG_DEBUG, "%d", line->cl_Hrs[i]);
 
 	printlogf(LOG_DEBUG, "\n  Days:    ");
-	for (i = 0; i < 32; ++i)
+	for (i = 0; i < FIELD_M_DAYS; ++i)
 		printlogf(LOG_DEBUG, "%d", line->cl_Days[i]);
 
 	printlogf(LOG_DEBUG, "\n  Mons:    ");
