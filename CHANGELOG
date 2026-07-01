@@ -1,4 +1,14 @@
-git 5.x 19-June-2026
+git 5.2 1-July-2026
+
+  * cl_Days[] now a zero based array.
+
+  * main.c renamed crond.c
+
+  * protos.h generation now a little more robust
+
+  * crontab now uses 'replacement' method to write edited files.
+    This should prevent issues with editors that replace the file
+    when saving.
 
   * simplify and cleanup RunMainLoop:
     * CheckUpdates() no longer called when a resync is necessary.
