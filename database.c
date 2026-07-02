@@ -266,13 +266,16 @@ void SynchronizeFile(const char *dpath, const char *fileName,
 uint64_t ParseField(char *user, int modvalue, int off, int star,
                     const char **names, char **pptr)
 {
-  char *ptr = *pptr;
   int n1 = -1;
   int n2 = -1;
   uint64_t bits = 0;
 
-  if (*pptr == NULL)
+  char *ptr;
+
+  if (pptr == NULL || *pptr == NULL)
     return 0;
+
+  ptr = *pptr;
 
   while (*ptr != ' ' && *ptr != '\t' && *ptr != '\n')
   {
