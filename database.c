@@ -213,18 +213,19 @@ void SynchronizeFile(const char *dpath, const char *fileName,
         line.cl_Hours =
             (uint32_t)ParseField(file->cf_UserName, 24, 0, 1, NULL, &ptr);
         line.cl_DayOfMonth =
-            (uint32_t)ParseField(file->cf_UserName, 32, 0, 0, NULL, &ptr);
+            (uint32_t)ParseField(file->cf_UserName, 31, -1, 0, NULL, &ptr);
         line.cl_Month =
             (uint16_t)ParseField(file->cf_UserName, 12, -1, 1, MonAry, &ptr);
         line.cl_DayOfWeek =
             (uint8_t)ParseField(file->cf_UserName, 7, 0, 0, DowAry, &ptr);
 
+        //  fix day/day-of-week:
         if (!line.cl_DayOfWeek && !line.cl_DayOfMonth)
         {
           //  cl_DayOfWeek and cl_DayOfMonth are Or'd in TestJobs() to
           //  determine when to run jobs.  If both are '*' then we
-          //  need to set at least one of them to ALL, but we'll
-          //  do both.
+          //  need to set at least one of them to ALL Days, but we'll
+          //  do both:
           line.cl_DayOfMonth = ~(uint32_t)0; /* All Days of Month */
           line.cl_DayOfWeek = ~(uint8_t)0;   /* All Days of Week */
         }
@@ -450,7 +451,7 @@ int TestJobs(time_t t1, time_t t2)
 
       uint64_t minMask = (uint64_t)1 << tp->tm_min;
       uint64_t hrsMask = (uint32_t)1 << tp->tm_hour;
-      uint64_t dayMask = (uint32_t)1 << tp->tm_mday;
+      uint64_t dayMask = (uint32_t)1 << (tp->tm_mday - 1);
       uint64_t monMask = (uint64_t)1 << tp->tm_mon;
       uint64_t dowMask = (uint64_t)1 << tp->tm_wday;
 
