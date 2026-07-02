@@ -20,8 +20,6 @@
 #include <sys/wait.h>
 #include <time.h>
 
-#define ARYSIZE(ary) (sizeof(ary) / sizeof((ary)[0]))
-
 void SynchronizeFile(const char *dpath, const char *fname, const char *uname);
 void DeleteFile(CronFile **pfile);
 uint64_t ParseField(char *user, int modvalue, int off, int star,
