@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <time.h>
@@ -27,14 +28,9 @@ uint64_t ParseField(char *user, int modvalue, int off, int star,
 
 CronFile *FileBase;
 
-const char *DowAry[] = {"sun", "mon", "tue", "wed", "thu", "fri", "sat",
+const char *DowAry[] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", NULL};
 
-                        "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", NULL};
-
-const char *MonAry[] = {"jan", "feb", "mar", "apr", "may", "jun", "jul",
-                        "aug", "sep", "oct", "nov", "dec",
-
-                        "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul",
+const char *MonAry[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul",
                         "Aug", "Sep", "Oct", "Nov", "Dec", NULL};
 
 void CheckUpdates(const char *dpath, const char *user_override)
@@ -304,7 +300,7 @@ uint64_t ParseField(char *user, int modvalue, int off, int star,
 
       for (i = 0; names[i]; ++i)
       {
-        if (strncmp(ptr, names[i], strlen(names[i])) == 0)
+        if (strncasecmp(ptr, names[i], strlen(names[i])) == 0)
         {
           break;
         }
