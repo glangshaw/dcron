@@ -11,7 +11,7 @@ CRONTAB_GROUP = users
 CFLAGS = -O2 --std=c99 -pedantic -Wpedantic -Wall -Wextra
 CPPFLAGS = -D_DEFAULT_SOURCE
 
-CROND_OBJS = crond.o subs.o database.o job.o
+CROND_OBJS = crond.o subs.o database.o job.o bitset.o
 CRONTAB_OBJS = crontab.o subs.o
 
 all:  crond crontab

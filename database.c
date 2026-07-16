@@ -8,6 +8,7 @@
 #include "defs.h"
 #include "job.h"
 #include "subs.h"
+#include "bitset.h"
 
 #include <dirent.h>
 #include <inttypes.h>
@@ -339,33 +340,11 @@ uint64_t ParseField(char *user, int modvalue, int off, int star,
     if (*ptr == '/')
       skip = strtol(ptr + 1, &ptr, 10);
 
-    //  fill array, using a failsafe is the easiest way to prevent an
-    //  endless loop
+    // Set apprropriate bits for range: skip when all bits and star is 0:
 
     if (n1 != 0 || n2 != modvalue - 1 || skip != 1 || star == 1)
-    {
-      int s0 = 1;
-      int failsafe = 1024;
+      bits = setbits64(bits, modvalue, n1, n2, skip);
 
-      --n1;
-      do
-      {
-        n1 = (n1 + 1) % modvalue;
-
-        if (--s0 == 0)
-        {
-          bits |= (uint64_t)1 << n1;
-          s0 = skip;
-        }
-      } while (n1 != n2 && --failsafe);
-
-      if (failsafe == 0)
-      {
-        logn(5, "failed user %s parsing %s\n", user, *pptr);
-        *pptr = NULL;
-        return 0;
-      }
-    }
     if (*ptr != ',')
       break;
     ++ptr;
