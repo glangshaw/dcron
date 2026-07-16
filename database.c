@@ -446,11 +446,11 @@ int TestJobs(time_t t1, time_t t2)
       CronFile *file;
       CronLine *line;
 
-      uint64_t minMask = (uint64_t)1 << tp->tm_min;
-      uint64_t hrsMask = (uint32_t)1 << tp->tm_hour;
-      uint64_t dayMask = (uint32_t)1 << (tp->tm_mday - 1);
-      uint64_t monMask = (uint64_t)1 << tp->tm_mon;
-      uint64_t dowMask = (uint64_t)1 << tp->tm_wday;
+      uint64_t minMask = UINT64_C(1) << tp->tm_min;
+      uint32_t hrsMask = UINT32_C(1) << tp->tm_hour;
+      uint32_t dayMask = UINT32_C(1) << (tp->tm_mday - 1);
+      uint16_t monMask = UINT16_C(1) << tp->tm_mon;
+      uint8_t dowMask = UINT8_C(1) << tp->tm_wday;
 
       for (file = FileBase; file; file = file->cf_Next)
       {
