@@ -221,8 +221,8 @@ void SynchronizeFile(const char *dpath, const char *fileName,
           //  determine when to run jobs.  If both are '*' then we
           //  need to set at least one of them to ALL Days, but we'll
           //  do both:
-          line.cl_DayOfMonth = ~(uint32_t)0; /* All Days of Month */
-          line.cl_DayOfWeek = ~(uint8_t)0;   /* All Days of Week */
+            line.cl_DayOfMonth = ~ UINT32_C(0); /* All Days of Month */
+            line.cl_DayOfWeek = ~ UINT8_C(0);   /* All Days of Week */
         }
 
         logn(7, "    bitsMins: %016" PRIX64 "\n", line.cl_Minutes);
