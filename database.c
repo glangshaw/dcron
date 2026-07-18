@@ -110,18 +110,13 @@ void SynchronizeDir(const char *dpath, const char *user_override,
         continue;
       if (strcmp(den->d_name, CRONUPDATE) == 0)
         continue;
-      if (user_override)
-      {
-        SynchronizeFile(dpath, den->d_name, user_override);
-      }
-      else if (getpwnam(den->d_name))
-      {
-        SynchronizeFile(dpath, den->d_name, den->d_name);
-      }
-      else
+      if (!user_override && !getpwnam(den->d_name))
       {
         logn(4, "ignoring %s/%s (non-existant user)\n", dpath, den->d_name);
+        continue;
       }
+      SynchronizeFile(dpath, den->d_name,
+                      (user_override) ? user_override : den->d_name);
     }
     closedir(dir);
   }
