@@ -207,9 +207,8 @@ int main(int argc, char *argv[])
       }
     }
 
-    snprintf(path, sizeof(path), "%s.new", pas->pw_name);
-    if ((fd = open(path, O_CREAT | O_TRUNC | O_EXCL | O_APPEND | O_WRONLY,
-                   0600)) >= 0)
+    snprintf(path, sizeof(path), ".%s.XXXXXX", pas->pw_name);
+    if ((fd = mkstemp(path)) >= 0)
     {
       while ((n = read(repFd, buf, sizeof(buf))) > 0)
       {
