@@ -65,7 +65,8 @@ typedef struct CronLine
   int cl_MailPos;         /* 'empty file' size */
   uint64_t cl_Minutes;    /* bitmask for minutes 2^n where n = 0..59 */
   uint32_t cl_Hours;      /* bitmask for hours 2^n where n = 0..23 */
-  uint32_t cl_DayOfMonth; /* bitmask for days 2^(n-1) where n = 1..31, i.e. bit 0 is day 1 */
+  uint32_t cl_DayOfMonth; /* bitmask for days 2^(n-1) where n = 1..31, i.e. bit
+                             0 is day 1 */
   uint16_t cl_Month;      /* bitmask for minutes 2^n where n = 0..11 */
   uint8_t cl_DayOfWeek;   /* bitmask for days of week 2^n where n = 0..6,
                              beginning Sunday */

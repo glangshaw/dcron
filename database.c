@@ -5,10 +5,10 @@
 //  May be distributed under the GNU General Public License
 
 #include "database.h"
+#include "bitset.h"
 #include "defs.h"
 #include "job.h"
 #include "subs.h"
-#include "bitset.h"
 
 #include <dirent.h>
 #include <inttypes.h>
@@ -31,7 +31,7 @@ CronFile *FileBase;
 
 const char *DowAry[] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", NULL};
 
-const char *MonAry[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul",
+const char *MonAry[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul",
                         "Aug", "Sep", "Oct", "Nov", "Dec", NULL};
 
 void CheckUpdates(const char *dpath, const char *user_override)
@@ -221,8 +221,8 @@ void SynchronizeFile(const char *dpath, const char *fileName,
           //  determine when to run jobs.  If both are '*' then we
           //  need to set at least one of them to ALL Days, but we'll
           //  do both:
-            line.cl_DayOfMonth = ~ UINT32_C(0); /* All Days of Month */
-            line.cl_DayOfWeek = ~ UINT8_C(0);   /* All Days of Week */
+          line.cl_DayOfMonth = ~UINT32_C(0); /* All Days of Month */
+          line.cl_DayOfWeek = ~UINT8_C(0);   /* All Days of Week */
         }
 
         logn(7, "    bitsMins: %016" PRIX64 "\n", line.cl_Minutes);
