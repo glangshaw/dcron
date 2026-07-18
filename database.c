@@ -106,7 +106,7 @@ void SynchronizeDir(const char *dpath, const char *user_override,
   {
     while ((den = readdir(dir)) != NULL)
     {
-      if (strchr(den->d_name, '.') != NULL)
+      if (den->d_name[0] == '.')
         continue;
       if (strcmp(den->d_name, CRONUPDATE) == 0)
         continue;
