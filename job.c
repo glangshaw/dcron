@@ -61,12 +61,19 @@ RunJob(CronFile *file, CronLine *line)
 	if ((line->cl_Pid = fork()) == 0) {
 		/* CHILD, FORK OK, PRE-EXEC */
 
-		/*
-		 * Clean up process environmennt for job.
-		 * ChangeUser() will setup: USER, LOGNAME, HOME, and SHELL.
-		 */
-        if ( ClearEnvOpt == 1 )
-            clearenv();
+		/* Clean up process environmennt for job. */
+
+        if (ClearEnvOpt == 1) {
+			/*
+			 * The OpenGroup Base Specification (POSIX) requires cron
+			 * to provide jobs with a default environment containing
+			 * at least LOGNAME, HOME, SHELL and PATH.
+			 * ChangeUser() will set the first three of these, so we
+			 * only need to set PATH here.
+			 */
+			clearenv();
+			setenv("PATH", DEFAULT_PATH, 1);
+		}
 
 		/* Change running state to the user in question */
 

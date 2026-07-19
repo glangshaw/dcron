@@ -81,6 +81,9 @@
 #define TMPDIR		"/tmp"
 #endif
 
+#ifndef DEFAULT_PATH
+#define DEFAULT_PATH	"/usr/local/bin:/usr/bin:/bin"
+#endif
 #ifndef SENDMAIL
 #define SENDMAIL	"/usr/sbin/sendmail"
 #endif
