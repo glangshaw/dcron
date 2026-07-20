@@ -38,14 +38,9 @@ replace a crontab. If FILE is not specified or specified as
 .RB ` \- '
 input will be read from stdin.
 .PP
-Unlike other crond/crontabs, this implementation does not try to do
-everything under the sun.  Frankly, a shell script is much more able
-to manipulate the environment then cron and I see no particular reason
-to use the user's shell (from his password entry) to run cron commands
-when this requires special casing of non-user crontabs, such as those
-for UUCP.  When a crontab command is run, this crontab runs it with
-/bin/sh and sets up only three environment variables: USER, HOME, and
-SHELL.
+When a crontab command is run, this cron implementation runs it with
+/bin/sh and an environment comprising of only four environment
+variables: HOME, LOGNAME, SHELL and PATH.
 .PP
 crond automatically detects changes in the time.  Reverse-indexed
 time changes less then an hour old will NOT re-run crontab commands

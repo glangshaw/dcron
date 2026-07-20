@@ -88,7 +88,7 @@ int ChangeUser(const char *user, int dochdir)
     logn(3, "failed to get uid for %s", user);
     return (-1);
   }
-  setenv("USER", pas->pw_name, 1);
+  setenv("LOGNAME", pas->pw_name, 1);
   setenv("HOME", pas->pw_dir, 1);
   setenv("SHELL", "/bin/sh", 1);
 

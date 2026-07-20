@@ -46,6 +46,14 @@ void RunJob(CronFile *file, CronLine *line)
     // Create a new process group - parent will also do this.
     setpgid(0, 0);
 
+    // The POSIX base specification requires a default environment be
+    // setup for cron jobs containing at least, HOME, LOGNAME, SHELL
+    // and PATH, where SHELL will be the path to 'sh'.
+    // ChangeUser() will set the first three of these, only leaving
+    // PATH to be set here.
+    clearenv();
+    setenv("PATH", DEFAULT_PATH, 1);
+
     //  Change running state to the user in question.
     if (ChangeUser(file->cf_UserName, 1) < 0)
     {

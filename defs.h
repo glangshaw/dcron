@@ -23,10 +23,13 @@
 #define OPEN_MAX 256
 #endif
 
+#ifndef DEFAULT_PATH
+#define DEFAULT_PATH "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+#endif
+
 #ifndef SENDMAIL
 #define SENDMAIL "/usr/sbin/sendmail"
 #endif
-
 #ifndef SENDMAIL_ARGS
 #define SENDMAIL_ARGS "-t", "-oem", "-i"
 #endif
