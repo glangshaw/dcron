@@ -13,10 +13,11 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <limits.h>
 
 void RunJob(CronFile *file, CronLine *line)
 {
-  char mailFile[128];
+  char mailFile[PATH_MAX];
   int mailFd;
 
   line->cl_Pid = 0;
@@ -103,7 +104,7 @@ void RunJob(CronFile *file, CronLine *line)
   {
     //  PARENT, FORK SUCCESS
 
-    char mailFile2[128];
+    char mailFile2[PATH_MAX];
 
     //  Put child in its own process group
     setpgid(line->cl_Pid, 0);
@@ -126,7 +127,7 @@ void EndJob(CronFile *file, CronLine *line)
 {
   //  EndJob() - called when job terminates and when mail terminates
   int mailFd;
-  char mailFile[128];
+  char mailFile[PATH_MAX];
   struct stat sbuf;
 
   if (line->cl_Pid <= 0) /* no job */
