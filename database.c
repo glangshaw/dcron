@@ -139,7 +139,9 @@ void SynchronizeFile(const char *dpath, const char *fileName,
   CronFile *file;
   int maxEntries;
   int maxLines;
-  char buf[1024];
+  char *lineBuf = NULL;
+  size_t lineBufSize = 0;
+  ssize_t lineLength;
   char *path;
   FILE *fi;
 
@@ -182,20 +184,18 @@ void SynchronizeFile(const char *dpath, const char *fileName,
       file->cf_DPath = strdup(dpath);
       pline = &file->cf_LineBase;
 
-      while (fgets(buf, sizeof(buf), fi) != NULL && --maxLines)
+      while ((lineLength = getline(&lineBuf, &lineBufSize, fi)) != -1 &&
+             --maxLines)
       {
         CronLine line;
-        char *ptr = buf;
-        int len;
+        char *ptr = lineBuf;
 
-        while (*ptr == ' ' || *ptr == '\t' || *ptr == '\n')
-          ++ptr;
+        if (lineLength > 0 && lineBuf[lineLength - 1] == '\n')
+          lineBuf[--lineLength] = '\0';
 
-        len = strlen(ptr);
-        if (len && ptr[len - 1] == '\n')
-          ptr[--len] = 0;
+        ptr += strspn(ptr, " \t\n");
 
-        if (*ptr == 0 || *ptr == '#')
+        if (*ptr == '\0' || *ptr == '#')
           continue;
 
         if (--maxEntries == 0)
@@ -203,7 +203,7 @@ void SynchronizeFile(const char *dpath, const char *fileName,
 
         memset(&line, 0, sizeof(line));
 
-        logn(7, "User %s Entry %s\n", userName, buf);
+        logn(7, "User %s Entry %s\n", userName, lineBuf);
 
         //  parse date ranges
 
@@ -250,6 +250,8 @@ void SynchronizeFile(const char *dpath, const char *fileName,
 
         pline = &((*pline)->cl_Next);
       }
+      free(lineBuf);
+
       *pline = NULL;
 
       file->cf_Next = FileBase;
