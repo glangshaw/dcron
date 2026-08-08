@@ -5,12 +5,14 @@
 //  May be distributed under the GNU General Public License
 
 #include "database.h"
+
 #include "bitset.h"
 #include "defs.h"
 #include "job.h"
 #include "subs.h"
 
 #include <dirent.h>
+#include <errno.h>
 #include <inttypes.h>
 #include <limits.h>
 #include <pwd.h>
@@ -42,7 +44,9 @@ void CheckUpdates(const char *dpath, const char *user_override)
   //  user_override user.
 
   FILE *fi;
-  char buf[256];
+  char *lineBuf = NULL;
+  size_t lineBufSize;
+  ssize_t lineLength;
   char *ptr;
   char *path;
 
@@ -52,9 +56,9 @@ void CheckUpdates(const char *dpath, const char *user_override)
   if ((fi = fopen(path, "r")) != NULL)
   {
     remove(path);
-    while (fgets(buf, sizeof(buf), fi) != NULL)
+    while ((lineLength = getline(&lineBuf, &lineBufSize, fi)) != -1)
     {
-      ptr = strtok(buf, " \t\r\n");
+      ptr = strtok(lineBuf, " \t\r\n");
       if (user_override)
         SynchronizeFile(dpath, ptr, user_override);
       else if (getpwnam(ptr))
@@ -62,7 +66,11 @@ void CheckUpdates(const char *dpath, const char *user_override)
       else
         logn(4, "ignoring %s/%s (non-existant user)\n", dpath, ptr);
     }
+    if (ferror(fi))
+      logn(3, "getline() error reading %s: %s\n", CRONUPDATE, strerror(errno));
+
     fclose(fi);
+    free(lineBuf);
   }
   free(path);
 }
