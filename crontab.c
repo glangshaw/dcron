@@ -14,6 +14,7 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <limits.h>
 
 #include "defs.h"
 #include "subs.h"
@@ -42,6 +43,7 @@ int main(int argc, char *argv[])
   char *userName = NULL;
   int repFd = 0;
   char caller[256]; /* user that ran program */
+  char buf[BUFSIZ];
   int opt;
 
   UserId = getuid();
@@ -148,7 +150,6 @@ int main(int argc, char *argv[])
   case LIST:
   {
     FILE *fi;
-    char buf[1024];
 
     if ((fi = fopen(pas->pw_name, "r")))
     {
@@ -167,7 +168,6 @@ int main(int argc, char *argv[])
     FILE *fi;
     int fd;
     int n;
-    char buf[1024];
 
     if ((fd = mkstemp(edFile)) >= 0)
     {
@@ -190,8 +190,7 @@ int main(int argc, char *argv[])
     // fall through.
   case REPLACE:
   {
-    char buf[1024];
-    char path[1024];
+    char path[PATH_MAX];
     int fd;
     int n;
 
@@ -267,7 +266,7 @@ int GetReplaceStream(const char *user, const char *file)
   int pid;
   int fd;
   int n;
-  char buf[1024];
+  char buf[PIPE_BUF];
 
   if (pipe(filedes) < 0)
   {
