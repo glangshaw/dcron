@@ -1,6 +1,6 @@
 .\" Copyright 1994 Matthew Dillon (dillon@apollo.backplane.com)
 .\" May be distributed under the GNU General Public License
-.TH CRONTAB 1 "25 June 2026" "dcron 3.2"
+.TH CRONTAB 1 "12 August 2026" "dcron 3.2"
 .SH NAME
 crontab \- manipulate per-user crontabs (Dillon's Cron)
 .SH SYNOPSIS
@@ -94,9 +94,10 @@ the month.
 0 4 1 jan * date
 
 .br
-# once an hour, all output appended to log file
+# once an hour, every day of january and every Sunday,
+all output appended to log file
 .br
-0 4 1 jan * date >>/var/log/messages 2>&1
+0 * * jan sun date >>/var/log/messages 2>&1
 
 The command portion of the line is run with 
 .B /bin/sh \-c <command>
