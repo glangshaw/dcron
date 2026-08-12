@@ -213,20 +213,34 @@ void SynchronizeFile(const char *dpath, const char *fileName,
         line.cl_DayOfMonth =
             (uint32_t)ParseField(file->cf_UserName, 31, -1, 0, NULL, &ptr);
         line.cl_Month =
-            (uint16_t)ParseField(file->cf_UserName, 12, -1, 1, MonAry, &ptr);
+            (uint16_t)ParseField(file->cf_UserName, 12, -1, 0, MonAry, &ptr);
         line.cl_DayOfWeek =
             (uint8_t)ParseField(file->cf_UserName, 7, 0, 0, DowAry, &ptr);
 
-        //  fix day/day-of-week:
+        // Fixups for fields marked as '*'
+        //
+        //  We can't let PaseField() set all bits for Day/Month and
+        //  DayOfWeek independently as we do for Hours and Minutes
+        //  owing to the interactions between them.
+
+        // When Month is specified and DayOfMonths is not,
+        // set all days of month.
+
+        if (line.cl_Month && !line.cl_DayOfMonth)
+          line.cl_DayOfMonth = ~UINT32_C(0);
+
+        //  If both day fields are '*' then we need to set at least
+        //  one of them.  Use DayOfWeek as that is the first test
+        //  condition in TestJobs() and will short-circuit the
+        //  remaining condition checks.
+
         if (!line.cl_DayOfWeek && !line.cl_DayOfMonth)
-        {
-          //  cl_DayOfWeek and cl_DayOfMonth are Or'd in TestJobs() to
-          //  determine when to run jobs.  If both are '*' then we
-          //  need to set at least one of them to ALL Days, but we'll
-          //  do both:
-          line.cl_DayOfMonth = ~UINT32_C(0); /* All Days of Month */
-          line.cl_DayOfWeek = ~UINT8_C(0);   /* All Days of Week */
-        }
+          line.cl_DayOfWeek = ~UINT8_C(0);
+
+        // When Month is not specified, set all months
+
+        if (!line.cl_Month)
+          line.cl_Month = ~UINT16_C(0);
 
         logn(7, "    bitsMins: %016" PRIX64 "\n", line.cl_Minutes);
         logn(7, "    bitsHrs:  %08" PRIX32 "\n", line.cl_Hours);
@@ -446,8 +460,8 @@ int TestJobs(time_t t1, time_t t2)
         {
           logn(7, "    LINE %s\n", line->cl_Shell);
           if (line->cl_Minutes & minMask && line->cl_Hours & hrsMask &&
-              (line->cl_DayOfMonth & dayMask || line->cl_DayOfWeek & dowMask) &&
-              line->cl_Month & monMask)
+              (line->cl_DayOfWeek & dowMask ||
+               (line->cl_DayOfMonth & dayMask && line->cl_Month & monMask)))
           {
             logn(7, "    JobToDo: %d %s\n", line->cl_Pid, line->cl_Shell);
             if (line->cl_Pid > 0)

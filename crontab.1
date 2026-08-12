@@ -56,13 +56,14 @@ able to issue the command once every two minutes.  If you do not like
 this feature, you can run your commands in the background with an '&'.
 .PP
 The crontab format is roughly similar to that used by vixiecron, but
-without complex features.  Individual fields may contain a time, a 
+without complex features.  Individual fields may contain a time, a
 time range, a time range with a skip factor, a symbolic range for the
 day of week and month in year, and additional subranges delimited with
-commas.  Blank lines in the crontab or lines that begin with a hash (#)
-are ignored.  If you specify both a day in the month and a day of week,
-the result is effectively ORd... the crontab entry will be run on the
-specified day of week and on the specified day in the month.
+commas.  Blank lines in the crontab or lines that begin with a hash
+(#) are ignored.  If you specify either a month or a day in the month,
+and a day of week, the result is effectively ORd... the crontab entry
+will be run on the specified day of week and on the specified day in
+the month.
 
 .sp 1
 .br
