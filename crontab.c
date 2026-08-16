@@ -7,6 +7,7 @@
 #include <err.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,7 +15,6 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <unistd.h>
-#include <limits.h>
 
 #include "defs.h"
 #include "subs.h"

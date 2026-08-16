@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/ioctl.h>
+#include <syslog.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -71,8 +72,8 @@ void RunMainLoop()
     stime = sleep(WAKEUP_INTERVAL + 1 - time(NULL) % WAKEUP_INTERVAL);
     t2 = time(NULL);
 
-    logn(7, "Wakeup(%s): %s", ((stime > 0) ? "interrupted" : "scheduled"),
-         ctime(&t2));
+    logn(LOG_DEBUG, "Wakeup(%s): %s",
+         ((stime > 0) ? "interrupted" : "scheduled"), ctime(&t2));
 
     //  Check for disparity: disparities over an hour either way
     //  result in resynchronization.  A reverse-indexed disparity less
@@ -86,7 +87,7 @@ void RunMainLoop()
     {
       rescan = t2 - t2 % RESCAN_INTERVAL;
       t1 = t2 - t2 % WAKEUP_INTERVAL;
-      logn(5, "time disparity greater than one hour detected.\n");
+      logn(LOG_NOTICE, "time disparity greater than one hour detected.\n");
     }
 
     if (stime == 0 && t2 >= t1)
@@ -186,7 +187,7 @@ int main(int argc, char **argv)
     setsid();
   }
 
-  logn(5, "%s " VERSION " dillon, started\n", argv[0]);
+  logn(LOG_NOTICE, "%s " VERSION " dillon, started\n", argv[0]);
 
   //  establish a signal handler for SIGCHLD.
 
@@ -194,7 +195,7 @@ int main(int argc, char **argv)
   sigemptyset(&sa.sa_mask);
   sa.sa_flags = SA_RESTART | SA_NOCLDSTOP;
   if (sigaction(SIGCHLD, &sa, NULL) == -1)
-    logn(3, "failed to establish sig_handler");
+    logn(LOG_ERR, "failed to establish sig_handler");
 
   SynchronizeDir(CDir, NULL, 1);
   SynchronizeDir(SCDir, "root", 1);

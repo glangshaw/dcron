@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <syslog.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -85,7 +86,7 @@ int ChangeUser(const char *user, int dochdir)
 
   if ((pas = getpwnam(user)) == 0)
   {
-    logn(3, "failed to get uid for %s", user);
+    logn(LOG_ERR, "failed to get uid for %s", user);
     return (-1);
   }
   setenv("LOGNAME", pas->pw_name, 1);
@@ -96,28 +97,28 @@ int ChangeUser(const char *user, int dochdir)
 
   if (initgroups(user, pas->pw_gid) < 0)
   {
-    logn(3, "initgroups failed: %s %s", user, strerror(errno));
+    logn(LOG_ERR, "initgroups failed: %s %s", user, strerror(errno));
     return (-1);
   }
   if (setregid(pas->pw_gid, pas->pw_gid) < 0)
   {
-    logn(3, "setregid failed: %s %d", user, pas->pw_gid);
+    logn(LOG_ERR, "setregid failed: %s %d", user, pas->pw_gid);
     return (-1);
   }
   if (setreuid(pas->pw_uid, pas->pw_uid) < 0)
   {
-    logn(3, "setreuid failed: %s %d", user, pas->pw_uid);
+    logn(LOG_ERR, "setreuid failed: %s %d", user, pas->pw_uid);
     return (-1);
   }
   if (dochdir)
   {
     if (chdir(pas->pw_dir) < 0)
     {
-      logn(3, "chdir failed: %s %s", user, pas->pw_dir);
+      logn(LOG_ERR, "chdir failed: %s %s", user, pas->pw_dir);
       if (chdir(TMPDIR) < 0)
       {
-        logn(3, "chdir failed: %s %s", user, pas->pw_dir);
-        logn(3, "chdir failed: %s " TMPDIR, user);
+        logn(LOG_ERR, "chdir failed: %s %s", user, pas->pw_dir);
+        logn(LOG_ERR, "chdir failed: %s " TMPDIR, user);
         return (-1);
       }
     }

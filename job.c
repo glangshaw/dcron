@@ -9,11 +9,12 @@
 #include "subs.h"
 
 #include <fcntl.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <syslog.h>
 #include <unistd.h>
-#include <limits.h>
 
 void RunJob(CronFile *file, CronLine *line)
 {
@@ -58,12 +59,12 @@ void RunJob(CronFile *file, CronLine *line)
     //  Change running state to the user in question.
     if (ChangeUser(file->cf_UserName, 1) < 0)
     {
-      logn(3, "ChangeUser failed (%s): %s\n", file->cf_UserName,
+      logn(LOG_ERR, "ChangeUser failed (%s): %s\n", file->cf_UserName,
            line->cl_Shell);
       exit(0);
     }
 
-    logn(6, "running crontab entry for user %s: %s\n", file->cf_UserName,
+    logn(LOG_INFO, "running crontab entry for user %s: %s\n", file->cf_UserName,
          line->cl_Shell);
 
     //  Setup close-on-exec descriptor in case exec fails
@@ -96,7 +97,7 @@ void RunJob(CronFile *file, CronLine *line)
   {
     //  PARENT, FORK FAILED
 
-    logn(3, "couldn't fork, user %s\n", file->cf_UserName);
+    logn(LOG_ERR, "couldn't fork, user %s\n", file->cf_UserName);
     line->cl_Pid = 0;
     remove(mailFile);
   }
@@ -174,7 +175,7 @@ void EndJob(CronFile *file, CronLine *line)
 
     if (ChangeUser(file->cf_UserName, 1) < 0)
     {
-      logn(3, "ChangeUser failed (%s), unable to send mail\n",
+      logn(LOG_ERR, "ChangeUser failed (%s), unable to send mail\n",
            file->cf_UserName);
       exit(0);
     }
@@ -202,7 +203,7 @@ void EndJob(CronFile *file, CronLine *line)
   {
     //  PARENT, FORK FAILED
 
-    logn(3, "unable to fork, user %s", file->cf_UserName);
+    logn(LOG_ERR, "unable to fork, user %s", file->cf_UserName);
     line->cl_Pid = 0;
   }
   else
