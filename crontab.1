@@ -1,6 +1,6 @@
 .\" Copyright 1994 Matthew Dillon (dillon@apollo.backplane.com)
 .\" May be distributed under the GNU General Public License
-.TH CRONTAB 1 "12 August 2026" "dcron 3.2"
+.TH CRONTAB 1 "16 August 2026" "dcron 3.2"
 .SH NAME
 crontab \- manipulate per-user crontabs (Dillon's Cron)
 .SH SYNOPSIS
@@ -115,6 +115,10 @@ Internally, this cron uses a quick indexing system to reduce CPU overhead
 when looking for commands to execute.  Several hundred crontabs with
 several thousand entries can be handled without using noticable CPU 
 resources.
+.SH BUGS
+This implementation of cron does not support the passing of input to
+cron jobs on stdin by use of the \fB%\fR sign as specified by the POSIX
+standard.
 .SH AUTHORS
 Matthew Dillon (dillon@apollo.backplane.com), original author.
 .br
