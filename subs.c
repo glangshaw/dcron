@@ -5,10 +5,10 @@
 //  May be distributed under the GNU General Public License
 
 #include "subs.h"
+
 #include "defs.h"
+
 #include <errno.h>
-#include <grp.h>
-#include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -76,52 +76,4 @@ int slog(char *buf, const char *ctl, int nmax, va_list va, int useDate)
   }
   vsnprintf(buf + dateStrLen, nmax, ctl, va);
   return (strlen(buf));
-}
-
-int ChangeUser(const char *user, int dochdir)
-{
-  struct passwd *pas;
-
-  // Obtain password entry and change privileges
-
-  if ((pas = getpwnam(user)) == 0)
-  {
-    logn(LOG_ERR, "failed to get uid for %s", user);
-    return (-1);
-  }
-  setenv("LOGNAME", pas->pw_name, 1);
-  setenv("HOME", pas->pw_dir, 1);
-  setenv("SHELL", "/bin/sh", 1);
-
-  //  Change running state to the user in question
-
-  if (initgroups(user, pas->pw_gid) < 0)
-  {
-    logn(LOG_ERR, "initgroups failed: %s %s", user, strerror(errno));
-    return (-1);
-  }
-  if (setregid(pas->pw_gid, pas->pw_gid) < 0)
-  {
-    logn(LOG_ERR, "setregid failed: %s %d", user, pas->pw_gid);
-    return (-1);
-  }
-  if (setreuid(pas->pw_uid, pas->pw_uid) < 0)
-  {
-    logn(LOG_ERR, "setreuid failed: %s %d", user, pas->pw_uid);
-    return (-1);
-  }
-  if (dochdir)
-  {
-    if (chdir(pas->pw_dir) < 0)
-    {
-      logn(LOG_ERR, "chdir failed: %s %s", user, pas->pw_dir);
-      if (chdir(TMPDIR) < 0)
-      {
-        logn(LOG_ERR, "chdir failed: %s %s", user, pas->pw_dir);
-        logn(LOG_ERR, "chdir failed: %s " TMPDIR, user);
-        return (-1);
-      }
-    }
-  }
-  return (pas->pw_uid);
 }

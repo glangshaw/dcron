@@ -5,13 +5,16 @@
 //  May be distributed under the GNU General Public License
 
 #include "job.h"
+#include "chuser.h"
 #include "defs.h"
 #include "subs.h"
 
+#include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <syslog.h>
 #include <unistd.h>
@@ -60,7 +63,7 @@ void RunJob(CronFile *file, CronLine *line)
     if (ChangeUser(file->cf_UserName, 1) < 0)
     {
       logn(LOG_ERR, "ChangeUser failed (%s): %s\n", file->cf_UserName,
-           line->cl_Shell);
+           strerror(errno));
       exit(0);
     }
 

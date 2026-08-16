@@ -24,7 +24,8 @@
 #endif
 
 #ifndef DEFAULT_PATH
-#define DEFAULT_PATH "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+#define DEFAULT_PATH                                                           \
+  "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 #endif
 
 #ifndef SENDMAIL

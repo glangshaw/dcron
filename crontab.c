@@ -4,6 +4,10 @@
 //  Copyright 2026 Gary Langshaw (gary.langshaw@gmail.com)
 //  May be distributed under the GNU General Public License
 
+#include "chuser.h"
+#include "defs.h"
+#include "subs.h"
+
 #include <err.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -14,10 +18,8 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
+#include <syslog.h>
 #include <unistd.h>
-
-#include "defs.h"
-#include "subs.h"
 
 const char *CDir = CRONTABS;
 const char *CDirOpt = NULL;
@@ -295,7 +297,10 @@ int GetReplaceStream(const char *user, const char *file)
   close(filedes[0]);
 
   if (ChangeUser(user, 0) < 0)
+  {
+    logn(LOG_ERR, "crontab: failed to change user to %s\n", user);
     exit(0);
+  }
 
   if (strcmp("-", file) == 0)
     fd = 0;
@@ -325,7 +330,11 @@ void EditFile(const char *user, const char *file)
     char visual[1024];
 
     if (ChangeUser(user, 1) < 0)
+    {
+      logn(LOG_ERR, "crontab: failed to change user to %s\n", user);
       exit(0);
+    }
+
     if ((ptr = getenv("VISUAL")) == NULL || strlen(ptr) > 256)
       ptr = PATH_VI;
 
