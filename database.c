@@ -206,7 +206,8 @@ void SynchronizeFile(const char *dpath, const char *fileName,
 
         memset(&line, 0, sizeof(line));
 
-        logn(LOG_DEBUG, "User %s Entry %s\n", userName, lineBuf);
+        logn(LOG_DEBUG, "User:  %s\n", userName);
+        logn(LOG_DEBUG, "Entry:  %s\n", lineBuf);
 
         //  parse date ranges
 
@@ -222,7 +223,7 @@ void SynchronizeFile(const char *dpath, const char *fileName,
 
         // Fixups for fields marked as '*'
         //
-        //  We can't let PaseField() set all bits for Day/Month and
+        //  We can't let ParseField() set all bits for Day/Month and
         //  DayOfWeek independently as we do for Hours and Minutes
         //  owing to the interactions between them.
 
@@ -249,11 +250,12 @@ void SynchronizeFile(const char *dpath, const char *fileName,
         if (!line.cl_Month)
           line.cl_Month = ~UINT16_C(0);
 
-        logn(LOG_DEBUG, "    bitsMins: %016" PRIX64 "\n", line.cl_Minutes);
-        logn(LOG_DEBUG, "    bitsHrs:  %08" PRIX32 "\n", line.cl_Hours);
-        logn(LOG_DEBUG, "    bitsDays: %08" PRIX32 "\n", line.cl_DayOfMonth);
-        logn(LOG_DEBUG, "    bitsMons: %04" PRIX16 "\n", line.cl_Month);
-        logn(LOG_DEBUG, "    bitsDow:  %02" PRIX8 "\n", line.cl_DayOfWeek);
+        logn(LOG_DEBUG,
+             "Bitset:  Mins %016" PRIX64 ", Hours %08" PRIX32
+             ", Days %08" PRIX32 ", Months %04" PRIX16 ", DayOfWeek %02" PRIX8
+             "\n",
+             line.cl_Minutes, line.cl_Hours, line.cl_DayOfMonth, line.cl_Month,
+             line.cl_DayOfWeek);
 
         //  check failure
 
@@ -267,7 +269,7 @@ void SynchronizeFile(const char *dpath, const char *fileName,
 
         (*pline)->cl_Shell = strdup(ptr);
 
-        logn(LOG_DEBUG, "    Command %s\n", ptr);
+        logn(LOG_DEBUG, "Command:  %s\n", ptr);
 
         pline = &((*pline)->cl_Next);
       }
