@@ -233,12 +233,16 @@ void SynchronizeFile(const char *dpath, const char *fileName,
           line.cl_DayOfMonth = ~UINT32_C(0);
 
         //  If both day fields are '*' then we need to set at least
-        //  one of them.  Use DayOfWeek as that is the first test
-        //  condition in TestJobs() and will short-circuit the
-        //  remaining condition checks.
+        //  one of them.  DayOfWeek is the first test condition in
+        //  TestJobs() and will short-circuit the Month and DayOfMonth
+        //  checks, however we'll set both day fields for cosmetic
+        //  reasons.
 
         if (!line.cl_DayOfWeek && !line.cl_DayOfMonth)
+        {
           line.cl_DayOfWeek = ~UINT8_C(0);
+          line.cl_DayOfMonth = ~UINT32_C(0);
+        }
 
         // When Month is not specified, set all months
 
