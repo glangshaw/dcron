@@ -72,7 +72,7 @@ int slog(char *buf, const char *ctl, int nmax, va_list va, int useDate)
   {
     t = time(NULL);
     tp = localtime(&t);
-    dateStrLen = strftime(buf, 128, "%d-%b-%Y %H:%M  ", tp);
+    dateStrLen = strftime(buf, 128, "%F(%a) %H:%M  ", tp);
   }
   vsnprintf(buf + dateStrLen, nmax, ctl, va);
   return (strlen(buf));
