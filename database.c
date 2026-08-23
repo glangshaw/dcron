@@ -27,8 +27,8 @@
 
 void SynchronizeFile(const char *dpath, const char *fname, const char *uname);
 void DeleteFile(CronFile **pfile);
-uint64_t ParseField(char *user, int modvalue, int off, int star,
-                    const char **names, char **pptr);
+uint64_t ParseField(char *user, int wrap, int off, const char **names,
+                    char **pptr);
 
 CronFile *FileBase;
 
@@ -211,24 +211,29 @@ void SynchronizeFile(const char *dpath, const char *fileName,
 
         //  parse date ranges
 
-        line.cl_Minutes = ParseField(file->cf_UserName, 60, 0, 1, NULL, &ptr);
+        line.cl_Minutes = ParseField(file->cf_UserName, 60, 0, NULL, &ptr);
         line.cl_Hours =
-            (uint32_t)ParseField(file->cf_UserName, 24, 0, 1, NULL, &ptr);
+            (uint32_t)ParseField(file->cf_UserName, 24, 0, NULL, &ptr);
         line.cl_DayOfMonth =
-            (uint32_t)ParseField(file->cf_UserName, 31, -1, 0, NULL, &ptr);
+            (uint32_t)ParseField(file->cf_UserName, 31, -1, NULL, &ptr);
         line.cl_Month =
-            (uint16_t)ParseField(file->cf_UserName, 12, -1, 0, MonAry, &ptr);
+            (uint16_t)ParseField(file->cf_UserName, 12, -1, MonAry, &ptr);
         line.cl_DayOfWeek =
-            (uint8_t)ParseField(file->cf_UserName, 7, 0, 0, DowAry, &ptr);
+            (uint8_t)ParseField(file->cf_UserName, 7, 0, DowAry, &ptr);
 
-        // Fixups for fields marked as '*'
+        //  check failure
+
+        if (ptr == NULL)
+          continue;
+
+        // Handle unspecified fields (those marked as '*')
         //
-        //  We can't let ParseField() set all bits for Day/Month and
-        //  DayOfWeek independently as we do for Hours and Minutes
-        //  owing to the interactions between them.
+        //  We can't let ParseField() set the bits for the unspecified
+        //  fields individually owing to the interactions between some
+        //  of them.
 
         // When Month is specified and DayOfMonths is not,
-        // set all days of month.
+        // set all days of month:
 
         if (line.cl_Month && !line.cl_DayOfMonth)
           line.cl_DayOfMonth = ~UINT32_C(0);
@@ -237,7 +242,7 @@ void SynchronizeFile(const char *dpath, const char *fileName,
         //  one of them.  DayOfWeek is the first test condition in
         //  TestJobs() and will short-circuit the Month and DayOfMonth
         //  checks, however we'll set both day fields for cosmetic
-        //  reasons.
+        //  reasons:
 
         if (!line.cl_DayOfWeek && !line.cl_DayOfMonth)
         {
@@ -245,10 +250,18 @@ void SynchronizeFile(const char *dpath, const char *fileName,
           line.cl_DayOfMonth = ~UINT32_C(0);
         }
 
-        // When Month is not specified, set all months
+        // When Month is not specified, set all months:
 
         if (!line.cl_Month)
           line.cl_Month = ~UINT16_C(0);
+
+        // When Minutes is unspecified, set all minutes:
+        if (!line.cl_Minutes)
+          line.cl_Minutes = ~UINT64_C(0);
+
+        // When Hours is unspecified, set all hours:
+        if (!line.cl_Hours)
+          line.cl_Hours = ~UINT32_C(0);
 
         logn(LOG_DEBUG,
              "Bitset:  Mins %016" PRIX64 ", Hours %08" PRIX32
@@ -256,11 +269,6 @@ void SynchronizeFile(const char *dpath, const char *fileName,
              "\n",
              line.cl_Minutes, line.cl_Hours, line.cl_DayOfMonth, line.cl_Month,
              line.cl_DayOfWeek);
-
-        //  check failure
-
-        if (ptr == NULL)
-          continue;
 
         *pline = calloc(1, sizeof(CronLine));
         **pline = line;
@@ -289,8 +297,8 @@ void SynchronizeFile(const char *dpath, const char *fileName,
   free(path);
 }
 
-uint64_t ParseField(char *user, int modvalue, int off, int star,
-                    const char **names, char **pptr)
+uint64_t ParseField(char *user, int wrap, int off, const char **names,
+                    char **pptr)
 {
   int n1 = -1;
   int n2 = -1;
@@ -305,16 +313,30 @@ uint64_t ParseField(char *user, int modvalue, int off, int star,
 
   while (*ptr != ' ' && *ptr != '\t' && *ptr != '\n')
   {
-    int skip = 0;
+    int step = 0;
 
     //  Handle numeric digit or symbol or '*'
 
     if (*ptr == '*')
     {
-      n1 = 0; /* everything will be filled */
-      n2 = modvalue - 1;
-      skip = 1;
       ++ptr;
+
+      if (*ptr == '\t' || *ptr == ' ' || *ptr == ',')
+      {
+        // unspecified field
+
+        // advance pointer over any remaining subfields (which will
+        // be redundant) and interfield whitespace, and then return 0:
+        ptr += strcspn(ptr, " \t");
+        *pptr = ptr + strspn(ptr, " \t");
+        return UINT64_C(0);
+      }
+      else
+      {
+        n1 = 0;
+        n2 = wrap - 1;
+        step = 1;
+      }
     }
     else if (*ptr >= '0' && *ptr <= '9')
     {
@@ -322,7 +344,7 @@ uint64_t ParseField(char *user, int modvalue, int off, int star,
         n1 = strtol(ptr, &ptr, 10) + off;
       else
         n2 = strtol(ptr, &ptr, 10) + off;
-      skip = 1;
+      step = 1;
     }
     else if (names)
     {
@@ -342,17 +364,17 @@ uint64_t ParseField(char *user, int modvalue, int off, int star,
           n1 = i;
         else
           n2 = i;
-        skip = 1;
+        step = 1;
       }
     }
 
     //  handle optional range '-'
 
-    if (skip == 0)
+    if (step == 0)
     {
       logn(LOG_NOTICE, "failed user %s parsing %s\n", user, *pptr);
       *pptr = NULL;
-      return 0;
+      return UINT64_C(0);
     }
     if (*ptr == '-' && n2 < 0)
     {
@@ -360,19 +382,19 @@ uint64_t ParseField(char *user, int modvalue, int off, int star,
       continue;
     }
 
-    //  collapse single-value ranges, handle skipmark, and fill in the
-    //  character array appropriately.
+    //  collapse single-value ranges, handle stepmark, and fill in the
+    //  bitset appropriately.
 
     if (n2 < 0)
       n2 = n1;
 
     if (*ptr == '/')
-      skip = strtol(ptr + 1, &ptr, 10);
+      step = strtol(ptr + 1, &ptr, 10);
 
-    // Set apprropriate bits for range: skip when all bits and star is 0:
+    // Set apprropriate bits for range:
 
-    if (n1 != 0 || n2 != modvalue - 1 || skip != 1 || star == 1)
-      bits = setbits64(bits, modvalue, n1, n2, skip);
+    if (step > 0)
+      bits = setbits64(bits, wrap, n1, n2, step);
 
     if (*ptr != ',')
       break;
@@ -384,11 +406,10 @@ uint64_t ParseField(char *user, int modvalue, int off, int star,
   {
     logn(LOG_NOTICE, "failed user %s parsing %s\n", user, *pptr);
     *pptr = NULL;
-    return 0;
+    return UINT64_C(0);
   }
 
-  while (*ptr == ' ' || *ptr == '\t' || *ptr == '\n')
-    ++ptr;
+  ptr += strspn(ptr, " \t");
 
   *pptr = ptr;
   return bits;
