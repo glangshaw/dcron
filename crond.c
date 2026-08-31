@@ -72,8 +72,8 @@ void RunMainLoop()
     stime = sleep(WAKEUP_INTERVAL + 1 - time(NULL) % WAKEUP_INTERVAL);
     t2 = time(NULL);
 
-    logn(LOG_DEBUG, "Wakeup(%s): %s",
-         ((stime > 0) ? "interrupted" : "scheduled"), ctime(&t2));
+    syslog(LOG_DEBUG, "Wakeup(%s): %s",
+           ((stime > 0) ? "interrupted" : "scheduled"), ctime(&t2));
 
     //  Check for disparity: disparities over an hour either way
     //  result in resynchronization.  A reverse-indexed disparity less
@@ -87,7 +87,7 @@ void RunMainLoop()
     {
       rescan = t2 - t2 % RESCAN_INTERVAL;
       t1 = t2 - t2 % WAKEUP_INTERVAL;
-      logn(LOG_NOTICE, "time disparity greater than one hour detected.\n");
+      syslog(LOG_NOTICE, "time disparity greater than one hour detected.");
     }
 
     if (stime == 0 && t2 >= t1)
@@ -187,7 +187,12 @@ int main(int argc, char **argv)
     setsid();
   }
 
-  logn(LOG_NOTICE, "%s " VERSION " dillon, started\n", argv[0]);
+  //  open syslog and set logging level
+
+  openlog("crond", 0, LOG_CRON);
+  setlogmask(LOG_UPTO(LogLevel));
+
+  syslog(LOG_NOTICE, "%s " VERSION " dillon, started", argv[0]);
 
   //  establish a signal handler for SIGCHLD.
 
@@ -195,7 +200,7 @@ int main(int argc, char **argv)
   sigemptyset(&sa.sa_mask);
   sa.sa_flags = SA_RESTART | SA_NOCLDSTOP;
   if (sigaction(SIGCHLD, &sa, NULL) == -1)
-    logn(LOG_ERR, "failed to establish sig_handler");
+    syslog(LOG_ERR, "failed to establish sig_handler");
 
   SynchronizeDir(CDir, NULL, 1);
   SynchronizeDir(SCDir, "root", 1);

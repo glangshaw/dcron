@@ -51,7 +51,7 @@ void CheckUpdates(const char *dpath, const char *user_override)
   char *ptr;
   char *path;
 
-  logn(LOG_DEBUG, "CheckUpdates on %s/%s\n", dpath, CRONUPDATE);
+  syslog(LOG_DEBUG, "CheckUpdates on %s/%s", dpath, CRONUPDATE);
 
   asprintf(&path, "%s/%s", dpath, CRONUPDATE);
   if ((fi = fopen(path, "r")) != NULL)
@@ -65,11 +65,11 @@ void CheckUpdates(const char *dpath, const char *user_override)
       else if (getpwnam(ptr))
         SynchronizeFile(dpath, ptr, ptr);
       else
-        logn(LOG_INFO, "ignoring %s/%s (non-existant user)\n", dpath, ptr);
+        syslog(LOG_INFO, "ignoring %s/%s (non-existant user)", dpath, ptr);
     }
     if (ferror(fi))
-      logn(LOG_ERR, "getline() error reading %s: %s\n", CRONUPDATE,
-           strerror(errno));
+      syslog(LOG_ERR, "getline() error reading %s: %s", CRONUPDATE,
+             strerror(errno));
 
     fclose(fi);
     free(lineBuf);
@@ -122,8 +122,8 @@ void SynchronizeDir(const char *dpath, const char *user_override,
         continue;
       if (!user_override && !getpwnam(den->d_name))
       {
-        logn(LOG_INFO, "ignoring %s/%s (non-existant user)\n", dpath,
-             den->d_name);
+        syslog(LOG_INFO, "ignoring %s/%s (non-existant user)", dpath,
+               den->d_name);
         continue;
       }
       SynchronizeFile(dpath, den->d_name,
@@ -132,7 +132,7 @@ void SynchronizeDir(const char *dpath, const char *user_override,
     closedir(dir);
   }
   else if (initial_scan) /* softerror, do not exit the program */
-    logn(LOG_ERR, "Unable to scan directory %s!\n", dpath);
+    syslog(LOG_ERR, "Unable to scan directory %s", dpath);
 }
 
 void SynchronizeFile(const char *dpath, const char *fileName,
@@ -206,8 +206,8 @@ void SynchronizeFile(const char *dpath, const char *fileName,
 
         memset(&line, 0, sizeof(line));
 
-        logn(LOG_DEBUG, "User:  %s\n", userName);
-        logn(LOG_DEBUG, "Entry:  %s\n", lineBuf);
+        syslog(LOG_DEBUG, "User:  %s", userName);
+        syslog(LOG_DEBUG, "Entry:  %s", lineBuf);
 
         //  parse date ranges
 
@@ -263,12 +263,11 @@ void SynchronizeFile(const char *dpath, const char *fileName,
         if (!line.cl_Hours)
           line.cl_Hours = ~UINT32_C(0);
 
-        logn(LOG_DEBUG,
-             "Bitset:  Mins %016" PRIX64 ", Hours %08" PRIX32
-             ", Days %08" PRIX32 ", Months %04" PRIX16 ", DayOfWeek %02" PRIX8
-             "\n",
-             line.cl_Minutes, line.cl_Hours, line.cl_DayOfMonth, line.cl_Month,
-             line.cl_DayOfWeek);
+        syslog(LOG_DEBUG,
+               "Bitset:  Mins %016" PRIX64 ", Hours %08" PRIX32
+               ", Days %08" PRIX32 ", Months %04" PRIX16 ", DayOfWeek %02" PRIX8,
+               line.cl_Minutes, line.cl_Hours, line.cl_DayOfMonth,
+               line.cl_Month, line.cl_DayOfWeek);
 
         *pline = calloc(1, sizeof(CronLine));
         **pline = line;
@@ -277,7 +276,7 @@ void SynchronizeFile(const char *dpath, const char *fileName,
 
         (*pline)->cl_Shell = strdup(ptr);
 
-        logn(LOG_DEBUG, "Command:  %s\n", ptr);
+        syslog(LOG_DEBUG, "Command:  %s", ptr);
 
         pline = &((*pline)->cl_Next);
       }
@@ -289,8 +288,8 @@ void SynchronizeFile(const char *dpath, const char *fileName,
       FileBase = file;
 
       if (maxLines == 0 || maxEntries == 0)
-        logn(LOG_INFO, "Maximum number of lines reached for user %s\n",
-             userName);
+        syslog(LOG_INFO, "Maximum number of lines reached for user %s",
+               userName);
     }
     fclose(fi);
   }
@@ -372,7 +371,7 @@ uint64_t ParseField(char *user, int wrap, int off, const char **names,
 
     if (step == 0)
     {
-      logn(LOG_NOTICE, "failed user %s parsing %s\n", user, *pptr);
+      syslog(LOG_NOTICE, "failed user %s parsing %s", user, *pptr);
       *pptr = NULL;
       return UINT64_C(0);
     }
@@ -404,7 +403,7 @@ uint64_t ParseField(char *user, int wrap, int off, const char **names,
   }
   if (*ptr != ' ' && *ptr != '\t' && *ptr != '\n')
   {
-    logn(LOG_NOTICE, "failed user %s parsing %s\n", user, *pptr);
+    syslog(LOG_NOTICE, "failed user %s parsing %s", user, *pptr);
     *pptr = NULL;
     return UINT64_C(0);
   }
@@ -483,23 +482,23 @@ int TestJobs(time_t t1, time_t t2)
 
       for (file = FileBase; file; file = file->cf_Next)
       {
-        logn(LOG_DEBUG, "FILE %s/%s (user %s):\n", file->cf_DPath,
-             file->cf_FileName, file->cf_UserName);
+        syslog(LOG_DEBUG, "FILE %s/%s (user %s):", file->cf_DPath,
+               file->cf_FileName, file->cf_UserName);
         if (file->cf_Deleted)
           continue;
         for (line = file->cf_LineBase; line; line = line->cl_Next)
         {
-          logn(LOG_DEBUG, "    LINE %s\n", line->cl_Shell);
+          syslog(LOG_DEBUG, "    LINE %s", line->cl_Shell);
           if (line->cl_Minutes & minMask && line->cl_Hours & hrsMask &&
               (line->cl_DayOfWeek & dowMask ||
                (line->cl_DayOfMonth & dayMask && line->cl_Month & monMask)))
           {
-            logn(LOG_DEBUG, "    JobToDo: %d %s\n", line->cl_Pid,
-                 line->cl_Shell);
+            syslog(LOG_DEBUG, "    JobToDo: %d %s", line->cl_Pid,
+                   line->cl_Shell);
             if (line->cl_Pid > 0)
             {
-              logn(LOG_DEBUG, "    process already running: %s\n",
-                   line->cl_Shell);
+              syslog(LOG_DEBUG, "    process already running: %s",
+                     line->cl_Shell);
             }
             else if (line->cl_Pid == 0)
             {
@@ -533,9 +532,9 @@ void RunJobs(void)
 
           RunJob(file, line);
 
-          logn(LOG_DEBUG, "FILE %s/%s USER %s pid %3d cmd %s\n", file->cf_DPath,
-               file->cf_FileName, file->cf_UserName, line->cl_Pid,
-               line->cl_Shell);
+          syslog(LOG_DEBUG, "FILE %s/%s USER %s pid %3d cmd %s",
+                 file->cf_DPath, file->cf_FileName, file->cf_UserName,
+                 line->cl_Pid, line->cl_Shell);
           if (line->cl_Pid < 0)
             file->cf_Ready = 1;
           else if (line->cl_Pid > 0)

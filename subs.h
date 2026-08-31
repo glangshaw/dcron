@@ -9,8 +9,6 @@
 
 #include <stdarg.h>
 
-void logn(int level, const char *ctl, ...);
-void logfd(int fd, const char *ctl, ...);
 void fdprintf(int fd, const char *ctl, ...);
 
 #endif
