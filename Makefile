@@ -12,7 +12,7 @@ CFLAGS = -O2 --std=c99 -pedantic -Wpedantic -Wall -Wextra
 CPPFLAGS = -D_DEFAULT_SOURCE
 
 CROND_OBJS = crond.o subs.o database.o job.o chuser.o bitset.o
-CRONTAB_OBJS = crontab.o chuser.o subs.o
+CRONTAB_OBJS = crontab.o chuser.o
 
 all:  crond crontab
 

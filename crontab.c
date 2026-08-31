@@ -297,10 +297,7 @@ int GetReplaceStream(const char *user, const char *file)
   close(filedes[0]);
 
   if (ChangeUser(user, 0) < 0)
-  {
-    logn(LOG_ERR, "crontab: failed to change user to %s\n", user);
-    exit(0);
-  }
+    errx(EXIT_FAILURE, "crontab: failed to change user to %s\n", user);
 
   if (strcmp("-", file) == 0)
     fd = 0;
@@ -308,7 +305,7 @@ int GetReplaceStream(const char *user, const char *file)
     fd = open(file, O_RDONLY);
 
   if (fd < 0)
-    errx(0, "unable to open %s\n", file);
+    errx(EXIT_FAILURE, "unable to open %s\n", file);
 
   buf[0] = 0;
   write(filedes[1], buf, 1);
@@ -330,10 +327,7 @@ void EditFile(const char *user, const char *file)
     char visual[1024];
 
     if (ChangeUser(user, 1) < 0)
-    {
-      logn(LOG_ERR, "crontab: failed to change user to %s\n", user);
-      exit(0);
-    }
+      errx(EXIT_FAILURE, "crontab: failed to change user to %s\n", user);
 
     if ((ptr = getenv("VISUAL")) == NULL || strlen(ptr) > 256)
       ptr = PATH_VI;
