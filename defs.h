@@ -44,7 +44,7 @@
 #define PATH_VI "/usr/bin/vi" /* location of vi */
 #endif
 
-#define VERSION "V3.2"
+#define VERSION "V3.3-dev"
 
 #include <stdint.h>
 

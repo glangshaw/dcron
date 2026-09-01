@@ -192,7 +192,7 @@ int main(int argc, char **argv)
   openlog("crond", 0, LOG_CRON);
   setlogmask(LOG_UPTO(LogLevel));
 
-  syslog(LOG_NOTICE, "%s " VERSION " dillon, started", argv[0]);
+  syslog(LOG_NOTICE, "%s " VERSION " GazL, started", argv[0]);
 
   //  establish a signal handler for SIGCHLD.
 
