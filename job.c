@@ -30,7 +30,7 @@ void RunJob(CronFile *file, CronLine *line)
   //  open mail file - owner root so nobody can screw with it.
 
   snprintf(mailFile, sizeof(mailFile), CRONMAIL "/cron.%s.%d",
-	   file->cf_UserName, (int)getpid());
+           file->cf_UserName, (int)getpid());
   mailFd =
       open(mailFile, O_CREAT | O_TRUNC | O_WRONLY | O_EXCL | O_APPEND, 0600);
 
@@ -38,7 +38,7 @@ void RunJob(CronFile *file, CronLine *line)
   {
     line->cl_MailFlag = 1;
     fdprintf(mailFd, "To: %s\nSubject: cron: %s\n\n", file->cf_UserName,
-	     line->cl_Shell);
+             line->cl_Shell);
     line->cl_MailPos = lseek(mailFd, 0, 1);
   }
 
@@ -63,12 +63,12 @@ void RunJob(CronFile *file, CronLine *line)
     if (ChangeUser(file->cf_UserName, 1) < 0)
     {
       syslog(LOG_ERR, "ChangeUser failed (%s): %s", file->cf_UserName,
-	     strerror(errno));
+             strerror(errno));
       exit(0);
     }
 
-    syslog(LOG_INFO, "running crontab entry for user %s: %s",
-	   file->cf_UserName, line->cl_Shell);
+    syslog(LOG_INFO, "%s:%d  Starting job (pid: %d): %s", file->cf_FileName,
+           line->cl_LineNum, getpid(), line->cl_Shell);
 
     //  Setup close-on-exec descriptor in case exec fails
 
@@ -86,19 +86,21 @@ void RunJob(CronFile *file, CronLine *line)
     }
     else
     {
-      syslog(LOG_ERR, "unable to create mail file user %s file %s, output to /dev/null",
-	     file->cf_UserName, mailFile);
+      syslog(LOG_ERR,
+             "%s:%d  unable to create mail file %s, output to /dev/null",
+             file->cf_FileName, line->cl_LineNum, mailFile);
     }
     execl("/bin/sh", "/bin/sh", "-c", line->cl_Shell, NULL, NULL);
     syslog(LOG_ERR, "unable to exec, user %s cmd /bin/sh -c %s",
-	    file->cf_UserName, line->cl_Shell);
+           file->cf_UserName, line->cl_Shell);
     exit(0);
   }
   else if (line->cl_Pid < 0)
   {
     //  PARENT, FORK FAILED
 
-    syslog(LOG_ERR, "couldn't fork, user %s", file->cf_UserName);
+    syslog(LOG_ERR, "%s:%d  fork() failed!", file->cf_FileName,
+           line->cl_LineNum);
     line->cl_Pid = 0;
     remove(mailFile);
   }
@@ -113,7 +115,7 @@ void RunJob(CronFile *file, CronLine *line)
 
     //  rename mail-file based on pid of process
     snprintf(mailFile2, sizeof(mailFile2), CRONMAIL "/cron.%s.%d",
-	     file->cf_UserName, line->cl_Pid);
+             file->cf_UserName, line->cl_Pid);
     rename(mailFile, mailFile2);
   }
 
@@ -142,7 +144,7 @@ void EndJob(CronFile *file, CronLine *line)
   //  End of sendmail job
 
   snprintf(mailFile, sizeof(mailFile), CRONMAIL "/cron.%s.%d",
-	   file->cf_UserName, line->cl_Pid);
+           file->cf_UserName, line->cl_Pid);
   line->cl_Pid = 0;
 
   if (line->cl_MailFlag != 1)
@@ -176,8 +178,8 @@ void EndJob(CronFile *file, CronLine *line)
 
     if (ChangeUser(file->cf_UserName, 1) < 0)
     {
-      syslog(LOG_ERR, "ChangeUser failed (%s), unable to send mail",
-	     file->cf_UserName);
+      syslog(LOG_ERR, "%s:%d  ChangeUser failed, unable to send mail!",
+             file->cf_FileName, line->cl_LineNum);
       exit(0);
     }
 
@@ -196,15 +198,16 @@ void EndJob(CronFile *file, CronLine *line)
     close(mailFd);
 
     execl(SENDMAIL, SENDMAIL, SENDMAIL_ARGS, NULL, NULL);
-    syslog(LOG_ERR, "unable to exec %s, user %s, output to sink null",
-	   SENDMAIL, file->cf_UserName);
+    syslog(LOG_ERR, "unable to exec %s, user %s, output to sink null", SENDMAIL,
+           file->cf_UserName);
     exit(0);
   }
   else if (line->cl_Pid < 0)
   {
     //  PARENT, FORK FAILED
 
-    syslog(LOG_ERR, "unable to fork, user %s", file->cf_UserName);
+    syslog(LOG_ERR, "%s:%d  fork() failed!", file->cf_FileName,
+           line->cl_LineNum);
     line->cl_Pid = 0;
   }
   else

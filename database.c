@@ -179,8 +179,9 @@ void SynchronizeFile(const char *dpath, const char *fileName,
 
     if (fstat(fileno(fi), &sbuf) == 0 && sbuf.st_uid == DaemonUid)
     {
-      CronFile *file = calloc(1, sizeof(CronFile));
+      unsigned int lineNum = 0;
       CronLine **pline;
+      CronFile *file = calloc(1, sizeof(CronFile));
 
       file->cf_UserName = strdup(userName);
       file->cf_FileName = strdup(fileName);
@@ -192,6 +193,8 @@ void SynchronizeFile(const char *dpath, const char *fileName,
       {
         CronLine line;
         char *ptr = lineBuf;
+
+        ++lineNum;
 
         if (lineLength > 0 && lineBuf[lineLength - 1] == '\n')
           lineBuf[--lineLength] = '\0';
@@ -206,7 +209,7 @@ void SynchronizeFile(const char *dpath, const char *fileName,
 
         memset(&line, 0, sizeof(line));
 
-        syslog(LOG_DEBUG, "User:  %s", userName);
+        syslog(LOG_DEBUG, "Parsing:  %s:%u", path, lineNum);
         syslog(LOG_DEBUG, "Entry:  %s", lineBuf);
 
         //  parse date ranges
@@ -263,9 +266,13 @@ void SynchronizeFile(const char *dpath, const char *fileName,
         if (!line.cl_Hours)
           line.cl_Hours = ~UINT32_C(0);
 
+        // store line number
+        line.cl_LineNum = lineNum;
+
         syslog(LOG_DEBUG,
-               "Bitset:  Mins %016" PRIX64 ", Hours %08" PRIX32
-               ", Days %08" PRIX32 ", Months %04" PRIX16 ", DayOfWeek %02" PRIX8,
+               "Schedule:  Mins %016" PRIX64 ", Hours %08" PRIX32
+               ", Days %08" PRIX32 ", Months %04" PRIX16
+               ", DayOfWeek %02" PRIX8,
                line.cl_Minutes, line.cl_Hours, line.cl_DayOfMonth,
                line.cl_Month, line.cl_DayOfWeek);
 
@@ -482,30 +489,34 @@ int TestJobs(time_t t1, time_t t2)
 
       for (file = FileBase; file; file = file->cf_Next)
       {
-        syslog(LOG_DEBUG, "FILE %s/%s (user %s):", file->cf_DPath,
-               file->cf_FileName, file->cf_UserName);
         if (file->cf_Deleted)
           continue;
         for (line = file->cf_LineBase; line; line = line->cl_Next)
         {
-          syslog(LOG_DEBUG, "    LINE %s", line->cl_Shell);
           if (line->cl_Minutes & minMask && line->cl_Hours & hrsMask &&
               (line->cl_DayOfWeek & dowMask ||
                (line->cl_DayOfMonth & dayMask && line->cl_Month & monMask)))
           {
-            syslog(LOG_DEBUG, "    JobToDo: %d %s", line->cl_Pid,
-                   line->cl_Shell);
             if (line->cl_Pid > 0)
             {
-              syslog(LOG_DEBUG, "    process already running: %s",
-                     line->cl_Shell);
+              syslog(LOG_INFO,
+                     "%s:%u  Skipped: a previous run is still in progress "
+                     "(pid: %d).",
+                     file->cf_FileName, line->cl_LineNum, line->cl_Pid);
             }
             else if (line->cl_Pid == 0)
             {
+              syslog(LOG_DEBUG, "%s:%u  Ready to run.", file->cf_FileName,
+                     line->cl_LineNum);
               line->cl_Pid = -1;
               file->cf_Ready = 1;
               ++nJobs;
             }
+          }
+          else
+          {
+            syslog(LOG_DEBUG, "%s:%u  Awaiting Scheduled Time.",
+                   file->cf_FileName, line->cl_LineNum);
           }
         }
       }
@@ -532,9 +543,6 @@ void RunJobs(void)
 
           RunJob(file, line);
 
-          syslog(LOG_DEBUG, "FILE %s/%s USER %s pid %3d cmd %s",
-                 file->cf_DPath, file->cf_FileName, file->cf_UserName,
-                 line->cl_Pid, line->cl_Shell);
           if (line->cl_Pid < 0)
             file->cf_Ready = 1;
           else if (line->cl_Pid > 0)
